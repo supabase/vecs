@@ -37,8 +37,6 @@ def read_package_variable(key, filename="__init__.py"):
 check_python_version()
 
 
-DEV_REQUIRES = ["pytest", "parse", "numpy", "pytest-cov"]
-
 REQUIRES = ["pgvector==0.1.*", "sqlalchemy==2.*"]
 
 
@@ -67,5 +65,8 @@ setuptools.setup(
         "Programming Language :: Python :: 3.12",
     ],
     install_requires=REQUIRES,
-    extras_require={"dev": DEV_REQUIRES},
+    extras_require={
+        "dev": ["pytest", "parse", "numpy", "pytest-cov"],
+        "docs": ["mkdocs", "pygments", "pymdown-extensions", "mkautodoc"],
+    },
 )

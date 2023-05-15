@@ -1,0 +1,18 @@
+site_name: vecs
+site_description: Vector Database Client for pgvector
+site_url: https://vecs.readthedocs.io/en/stable/
+
+theme:
+    name: 'readthedocs'
+
+repo_name: olirice/vecs
+repo_url: https://github.com/olirice/vecs
+site_url: https://olirice.github.io/vecs
+
+nav:
+    - Introduction: 'index.md'
+
+markdown_extensions:
+  - codehilite
+  - admonition
+  - mkautodoc
