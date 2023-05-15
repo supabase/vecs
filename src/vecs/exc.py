@@ -5,6 +5,7 @@ __all__ = [
     "ArgError",
     "FilterError",
     "IndexNotFound",
+    "Unreachable",
 ]
 
 
@@ -29,4 +30,7 @@ class FilterError(VecsException):
 
 
 class IndexNotFound(VecsException):
+    ...
+
+class Unreachable(VecsException):
     ...

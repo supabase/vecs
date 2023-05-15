@@ -21,7 +21,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import postgresql
 
-from vecs.exc import CollectionAlreadyExists, CollectionNotFound, ArgError, FilterError, ArgError
+from vecs.exc import CollectionAlreadyExists, CollectionNotFound, ArgError, FilterError, ArgError, Unreachable
+
 
        
 if TYPE_CHECKING:
@@ -222,7 +223,7 @@ class Collection:
             with self.client.Session() as sess:
                 ix_name = sess.execute(query).scalar()
             self._index = ix_name
-        return self.index
+        return self._index
 
     def _supports_cosine_search(self):
         if self.index is None:
@@ -246,7 +247,7 @@ class Collection:
                 raise ArgError("replace is set to False but an index exists")
 
         if not measure == IndexMeasure.cosine_distance:
-            raise NotImplemented("only cosine distance is currently supported")
+            raise NotImplementedError("only cosine distance is currently supported")
 
         indexed = metadata_config.get("indexed") or []
         if not isinstance(indexed, list):
@@ -342,7 +343,7 @@ def build_filters(json_col: Column, indexed_fields, filters: Dict):
                     ]
                 )
 
-            raise Exception("Unreachable")
+            raise Unreachable()
 
         if isinstance(value, dict):
             if len(value) > 1:
@@ -363,7 +364,7 @@ def build_filters(json_col: Column, indexed_fields, filters: Dict):
                     return json_col.op("->")(key) < matches_value
 
                 else:
-                    raise FilterError("not implemented")
+                    raise Unreachable()
 
 
 def build_table(name: str, meta: MetaData, dimension) -> Table:
