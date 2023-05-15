@@ -19,7 +19,7 @@
 
 ---
 
-**Documentation**: <a href="https://vecs.readthedocs.io/en/latest/" target="_blank">https://flupy.readthedocs.io/en/latest/</a>
+**Documentation**: <a href="https://olirice.github.io/vecs/" target="_blank">https://olirice.github.io/vecs/</a>
 
 **Source Code**: <a href="https://github.com/olirice/vecs" target="_blank">https://github.com/olirice/vecs</a>
 
