@@ -10,21 +10,27 @@
       
       
       
+        <link rel="canonical" href="https://olirice.github.io/vecs/concepts_indexes/">
       
       
-      <link rel="icon" href="/vecs/assets/images/favicon.png">
+        <link rel="prev" href="../concepts_collections/">
+      
+      
+        <link rel="next" href="../concepts_metadata/">
+      
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.13">
     
     
       
-        <title>vecs</title>
+        <title>Indexes - vecs</title>
       
     
     
-      <link rel="stylesheet" href="/vecs/assets/stylesheets/main.85bb2934.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.85bb2934.min.css">
       
         
-        <link rel="stylesheet" href="/vecs/assets/stylesheets/palette.a6bdf11c.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.a6bdf11c.min.css">
       
       
 
@@ -40,7 +46,7 @@
       
     
     
-    <script>__md_scope=new URL("/vecs/",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -64,6 +70,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#indexes" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -76,7 +87,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/vecs/." title="vecs" class="md-header__button md-logo" aria-label="vecs" data-md-component="logo">
+    <a href=".." title="vecs" class="md-header__button md-logo" aria-label="vecs" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -95,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              Indexes
             
           </span>
         </div>
@@ -176,7 +187,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/vecs/." title="vecs" class="md-nav__button md-logo" aria-label="vecs" data-md-component="logo">
+    <a href=".." title="vecs" class="md-nav__button md-logo" aria-label="vecs" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -236,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/vecs/quickstart/" class="md-nav__link">
+      <a href="../quickstart/" class="md-nav__link">
         Quickstart
       </a>
     </li>
@@ -250,7 +261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/vecs/hosting/" class="md-nav__link">
+      <a href="../hosting/" class="md-nav__link">
         Hosting
       </a>
     </li>
@@ -270,16 +281,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
       
       
       
@@ -288,7 +299,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Concepts
@@ -301,7 +312,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/vecs/concepts_collections/" class="md-nav__link">
+      <a href="../concepts_collections/" class="md-nav__link">
         Collections
       </a>
     </li>
@@ -313,11 +324,21 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="/vecs/concepts_indexes/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Indexes
       </a>
+      
     </li>
   
 
@@ -329,7 +350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/vecs/concepts_metadata/" class="md-nav__link">
+      <a href="../concepts_metadata/" class="md-nav__link">
         Metadata
       </a>
     </li>
@@ -380,7 +401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/vecs/guides_insert/" class="md-nav__link">
+      <a href="../guides_insert/" class="md-nav__link">
         Insert data
       </a>
     </li>
@@ -431,7 +452,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/vecs/integrations_openai/" class="md-nav__link">
+      <a href="../integrations_openai/" class="md-nav__link">
         OpenAI
       </a>
     </li>
@@ -482,7 +503,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/vecs/support_changelog/" class="md-nav__link">
+      <a href="../support_changelog/" class="md-nav__link">
         Changelog
       </a>
     </li>
@@ -496,7 +517,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/vecs/support_limits/" class="md-nav__link">
+      <a href="../support_limits/" class="md-nav__link">
         Limits
       </a>
     </li>
@@ -527,6 +548,8 @@
   
   
   
+    
+  
   
 </nav>
                   </div>
@@ -538,8 +561,19 @@
             <div class="md-content" data-md-component="content">
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+                  
 
+  
+  
+
+
+<h1 id="indexes">Indexes</h1>
+
+
+
+
+
+                
               </article>
             </div>
           
@@ -571,10 +605,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "/vecs/", "features": ["navigation.expand"], "search": "/vecs/assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.expand"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="/vecs/assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../assets/javascripts/bundle.b4d07000.min.js"></script>
       
     
   </body>
