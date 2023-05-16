@@ -363,3 +363,75 @@ def test_create_index(client: vecs.Client) -> None:
 
     with pytest.raises(vecs.exc.ArgError):
         bar.create_index(measure="does not exist")
+
+    bar.query(
+        query_vector=[1, 2, 3, 4],
+        limit=1,
+        measure="cosine_distance",
+    )
+
+
+def test_cosine_index_query(client: vecs.Client) -> None:
+    dim = 4
+    bar = client.create_collection(name="bar", dimension=dim)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+    bar.create_index(measure=vecs.IndexMeasure.cosine_distance)
+    results = bar.query(
+        query_vector=[1, 2, 3, 4],
+        limit=1,
+        measure="cosine_distance",
+    )
+    assert len(results) == 1
+
+
+def test_l2_index_query(client: vecs.Client) -> None:
+    dim = 4
+    bar = client.create_collection(name="bar", dimension=dim)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+    bar.create_index(measure=vecs.IndexMeasure.l2_distance)
+    results = bar.query(
+        query_vector=[1, 2, 3, 4],
+        limit=1,
+        measure="l2_distance",
+    )
+    assert len(results) == 1
+
+
+def test_max_inner_product_index_query(client: vecs.Client) -> None:
+    dim = 4
+    bar = client.create_collection(name="bar", dimension=dim)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+    bar.create_index(measure=vecs.IndexMeasure.max_inner_product)
+    results = bar.query(
+        query_vector=[1, 2, 3, 4],
+        limit=1,
+        measure="max_inner_product",
+    )
+    assert len(results) == 1
+
+
+def test_mismatch_measure(client: vecs.Client) -> None:
+    dim = 4
+    bar = client.create_collection(name="bar", dimension=dim)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+    bar.create_index(measure=vecs.IndexMeasure.max_inner_product)
+    with pytest.warns():
+        results = bar.query(
+            query_vector=[1, 2, 3, 4],
+            limit=1,
+            # wrong measure
+            measure="cosine_distance",
+        )
+    assert len(results) == 1
+
+
+def test_is_indexed_for_measure(client: vecs.Client) -> None:
+    bar = client.create_collection(name="bar", dimension=4)
+
+    bar.create_index(measure=vecs.IndexMeasure.max_inner_product)
+    assert not bar.is_indexed_for_measure("invalid")  # type: ignore
+    assert bar.is_indexed_for_measure(vecs.IndexMeasure.max_inner_product)
+    assert not bar.is_indexed_for_measure(vecs.IndexMeasure.cosine_distance)
+
+    bar.create_index(measure=vecs.IndexMeasure.cosine_distance, replace=True)
+    assert bar.is_indexed_for_measure(vecs.IndexMeasure.cosine_distance)

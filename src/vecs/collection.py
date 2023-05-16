@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import uuid
 import warnings
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union
@@ -47,13 +48,19 @@ class IndexMethod(str, Enum):
 class IndexMeasure(str, Enum):
     cosine_distance = "cosine_distance"
     l2_distance = "l2_distance"
-    inner_product = "inner_product"
+    max_inner_product = "max_inner_product"
 
 
 INDEX_MEASURE_TO_OPS = {
     IndexMeasure.cosine_distance: "vector_cosine_ops",
     IndexMeasure.l2_distance: "vector_l2_ops",
-    IndexMeasure.inner_product: "vector_ip_ops",
+    IndexMeasure.max_inner_product: "vector_ip_ops",
+}
+
+INDEX_MEASURE_TO_SQLA_ACC = {
+    IndexMeasure.cosine_distance: lambda x: x.cosine_distance,
+    IndexMeasure.l2_distance: lambda x: x.l2_distance,
+    IndexMeasure.max_inner_product: lambda x: x.max_inner_product,
 }
 
 
@@ -151,27 +158,30 @@ class Collection:
         query_vector: Iterable[Numeric],
         limit: int = 10,
         filters: Optional[Dict] = None,
-        measure: IndexMeasure = IndexMeasure.cosine_distance,
+        measure: Union[IndexMeasure, str] = IndexMeasure.cosine_distance,
         include_value: bool = False,
         include_metadata: bool = False,
     ) -> Union[List[Record], List[str]]:
+
         if limit > 1000:
             raise ArgError("top_k must be <= 1000")
 
-        distance_lambda = None
+        # ValueError on bad input
+        try:
+            imeasure = IndexMeasure(measure)
+        except ValueError:
+            raise ArgError("Invalid index measure")
 
-        if not self.is_indexed_for_measure(measure):
+        if not self.is_indexed_for_measure(imeasure):
             warnings.warn(
-                "Query does not have a covering index. See Collection.create_index"
+                f"Query does not have a covering index for {imeasure}. See Collection.create_index"
             )
 
-        if measure == IndexMeasure.cosine_distance:
-            distance_lambda = self.table.c.vec.cosine_distance
-
+        distance_lambda = INDEX_MEASURE_TO_SQLA_ACC.get(imeasure)
         if distance_lambda is None:
             raise ArgError("invalid distance_measure")
 
-        distance_clause = distance_lambda(query_vector)
+        distance_clause = distance_lambda(self.table.c.vec)(query_vector)
 
         cols = [self.table.c.id]
 
@@ -183,7 +193,7 @@ class Collection:
 
         stmt = select(*cols)
         if filters:
-            stmt = stmt.filter(build_filters(self.table.c.metadata, ["genre"], filters))  # type: ignore
+            stmt = stmt.filter(build_filters(self.table.c.metadata, filters))  # type: ignore
 
         stmt = stmt.order_by(distance_clause)
         stmt = stmt.limit(limit)
@@ -265,7 +275,9 @@ class Collection:
             # at time of writing, no other methods are supported by pgvector
             raise ArgError("invalid index method")
 
-        if replace == False:
+        if replace:
+            self._index = None
+        else:
             if self.index is not None:
                 raise ArgError("replace is set to False but an index exists")
 
@@ -301,15 +313,25 @@ class Collection:
                     else math.sqrt(n_records)
                 )
 
+                unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
+
                 sess.execute(
                     text(
-                        f'create index ix_{ops}_{n_lists} on vecs."{clone_table.name}" using ivfflat (vec {ops}) with (lists={n_lists})'
+                        f"""
+                        create index ix_{ops}_{n_lists}_{unique_string}
+                          on vecs."{clone_table.name}"
+                          using ivfflat (vec {ops}) with (lists={n_lists})
+                        """
                     )
                 )
 
                 sess.execute(
                     text(
-                        f'create index ix_meta on vecs."{clone_table.name}" using gin ( metadata )'
+                        f"""
+                        create index ix_meta_{unique_string}
+                          on vecs."{clone_table.name}"
+                          using gin ( metadata )
+                        """
                     )
                 )
 
@@ -329,7 +351,7 @@ class Collection:
                 )
 
 
-def build_filters(json_col: Column, indexed_fields, filters: Dict):
+def build_filters(json_col: Column, filters: Dict):
     if not isinstance(filters, dict):
         raise FilterError("filters must be a dict")
 
@@ -347,20 +369,10 @@ def build_filters(json_col: Column, indexed_fields, filters: Dict):
                 )
 
             if key == "$and":
-                return and_(
-                    *[
-                        build_filters(json_col, indexed_fields, subcond)
-                        for subcond in value
-                    ]
-                )
+                return and_(*[build_filters(json_col, subcond) for subcond in value])
 
             if key == "$or":
-                return or_(
-                    *[
-                        build_filters(json_col, indexed_fields, subcond)
-                        for subcond in value
-                    ]
-                )
+                return or_(*[build_filters(json_col, subcond) for subcond in value])
 
             raise Unreachable()
 
