@@ -1,18 +1,39 @@
 site_name: vecs
+site_url: https://olirice.github.io/vecs
 site_description: Vector Database Client for pgvector
-site_url: https://vecs.readthedocs.io/en/stable/
-
-theme:
-    name: 'readthedocs'
 
 repo_name: olirice/vecs
 repo_url: https://github.com/olirice/vecs
-site_url: https://olirice.github.io/vecs
 
+theme:
+    name: 'material'
+    features:
+      - navigation.expand
+    palette:
+        primary: grey
+        accent: red
 nav:
-    - Introduction: 'index.md'
+  - Quickstart:
+    - quickstart.md
+    - hosting.md
+  - Concepts:
+    - Collections: concepts_collections.md
+    - Indexes: concepts_indexes.md
+    - Metadata: concepts_metadata.md
+  - Guides:
+    - Insert data: guides_insert.md
+  - Integrations:
+    - OpenAI: integrations_openai.md
+  - Support:
+    - Changelog: support_changelog.md
+    - Limits: support_limits.md
 
 markdown_extensions:
-  - codehilite
   - admonition
-  - mkautodoc
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

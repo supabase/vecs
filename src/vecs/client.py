@@ -48,4 +48,5 @@ class Client:
         """List all collections"""
         from vecs.collection import Collection
 
-        return Collection(name, -1, self)._drop()
+        Collection(name, -1, self)._drop()
+        return

@@ -67,6 +67,6 @@ setuptools.setup(
     install_requires=REQUIRES,
     extras_require={
         "dev": ["pytest", "parse", "numpy", "pytest-cov"],
-        "docs": ["mkdocs", "pygments", "pymdown-extensions", "mkautodoc"],
+        "docs": ["mkdocs", "pygments", "pymdown-extensions", "pymarkdown"],
     },
 )
