@@ -179,7 +179,8 @@ class Collection:
 
         distance_lambda = INDEX_MEASURE_TO_SQLA_ACC.get(imeasure)
         if distance_lambda is None:
-            raise ArgError("invalid distance_measure")
+            # unreachable
+            raise ArgError("invalid distance_measure")  # pragma: no cover
 
         distance_clause = distance_lambda(self.table.c.vec)(query_vector)
 
