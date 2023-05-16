@@ -1,7 +1,9 @@
-import vecs
-import numpy as np
 import random
+
+import numpy as np
 import pytest
+
+import vecs
 
 
 def test_upsert(client: vecs.Client) -> None:

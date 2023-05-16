@@ -1,5 +1,6 @@
-import vecs
 import pytest
+
+import vecs
 
 
 def test_create_collection(client: vecs.Client) -> None:

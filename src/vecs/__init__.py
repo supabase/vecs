@@ -1,6 +1,6 @@
+from vecs import exc
 from vecs.client import Client
 from vecs.collection import Collection, IndexMeasure, IndexMethod
-from vecs import exc
 
 __project__ = "vecs"
 __version__ = "0.1.0"

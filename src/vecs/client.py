@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
-from sqlalchemy import (
-    MetaData,
-    create_engine,
-    text,
-)
+from sqlalchemy import MetaData, create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from vecs.exc import CollectionNotFound

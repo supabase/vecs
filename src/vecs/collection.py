@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import warnings
 from enum import Enum
-from typing import Dict, Iterable, List, Optional, Tuple, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union
 
 from flupy import flu
 from pgvector.sqlalchemy import Vector
@@ -23,14 +23,12 @@ from sqlalchemy import (
 from sqlalchemy.dialects import postgresql
 
 from vecs.exc import (
+    ArgError,
     CollectionAlreadyExists,
     CollectionNotFound,
-    ArgError,
     FilterError,
-    ArgError,
     Unreachable,
 )
-
 
 if TYPE_CHECKING:
     from vecs.client import Client
