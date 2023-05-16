@@ -125,6 +125,7 @@ def test_getitem(client: vecs.Client) -> None:
         movies[["only strings work not lists"]]
 
 
+@pytest.mark.filterwarnings("ignore:Query does")
 def test_query(client: vecs.Client) -> None:
     n_records = 100
     dim = 64
@@ -145,13 +146,13 @@ def test_query(client: vecs.Client) -> None:
 
     bar.upsert(records)
 
-    query_id, query_vec, query_meta = bar["vec5"]
+    _, query_vec, query_meta = bar["vec5"]
 
     top_k = 7
 
     res = bar.query(
         query_vector=query_vec,
-        top_k=top_k,
+        limit=top_k,
         filters=None,
         measure="cosine_distance",
         include_value=False,
@@ -166,16 +167,16 @@ def test_query(client: vecs.Client) -> None:
     with pytest.raises(vecs.exc.ArgError):
         res = bar.query(
             query_vector=query_vec,
-            top_k=101,
+            limit=1001,
         )
 
     with pytest.raises(vecs.exc.ArgError):
-        res = bar.query(query_vector=query_vec, top_k=top_k, measure="invalid")
+        res = bar.query(query_vector=query_vec, limit=top_k, measure="invalid")
 
     # include_value
     res = bar.query(
         query_vector=query_vec,
-        top_k=top_k,
+        limit=top_k,
         filters=None,
         measure="cosine_distance",
         include_value=True,
@@ -187,7 +188,7 @@ def test_query(client: vecs.Client) -> None:
     # include_metadata
     res = bar.query(
         query_vector=query_vec,
-        top_k=top_k,
+        limit=top_k,
         filters=None,
         measure="cosine_distance",
         include_metadata=True,
@@ -197,6 +198,7 @@ def test_query(client: vecs.Client) -> None:
     assert res[0][1] == query_meta
 
 
+@pytest.mark.filterwarnings("ignore:Query does")
 def test_query_filters(client: vecs.Client) -> None:
     n_records = 100
     dim = 4
@@ -222,7 +224,7 @@ def test_query_filters(client: vecs.Client) -> None:
 
     res = bar.query(
         query_vector=query_rec[1],
-        top_k=3,
+        limit=3,
         filters={"year": {"$lt": 1990}},
         measure="cosine_distance",
         include_value=False,
@@ -234,7 +236,7 @@ def test_query_filters(client: vecs.Client) -> None:
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
             query_vector=query_rec[1],
-            top_k=3,
+            limit=3,
             filters=["wrong type"],
             measure="cosine_distance",
         )
@@ -242,7 +244,7 @@ def test_query_filters(client: vecs.Client) -> None:
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
             query_vector=query_rec[1],
-            top_k=3,
+            limit=3,
             # multiple keys
             filters={"key1": {"$eq": "v"}, "key2": {"$eq": "v"}},
             measure="cosine_distance",
@@ -251,7 +253,7 @@ def test_query_filters(client: vecs.Client) -> None:
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
             query_vector=query_rec[1],
-            top_k=3,
+            limit=3,
             # bad key
             filters={1: {"$eq": "v"}},
             measure="cosine_distance",
@@ -260,7 +262,7 @@ def test_query_filters(client: vecs.Client) -> None:
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
             query_vector=query_rec[1],
-            top_k=3,
+            limit=3,
             # and requires a list
             filters={"$and": {"year": {"$eq": 1997}}},
             measure="cosine_distance",
@@ -271,7 +273,7 @@ def test_query_filters(client: vecs.Client) -> None:
         len(
             bar.query(
                 query_vector=query_rec[1],
-                top_k=3,
+                limit=3,
                 # and requires a list
                 filters={
                     "$and": [
@@ -290,7 +292,7 @@ def test_query_filters(client: vecs.Client) -> None:
         len(
             bar.query(
                 query_vector=query_rec[1],
-                top_k=3,
+                limit=3,
                 # and requires a list
                 filters={
                     "$or": [
@@ -307,7 +309,7 @@ def test_query_filters(client: vecs.Client) -> None:
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
             query_vector=query_rec[1],
-            top_k=3,
+            limit=3,
             # bad value, too many conditions
             filters={"year": {"$eq": 1997, "$neq": 1998}},
             measure="cosine_distance",
@@ -316,7 +318,7 @@ def test_query_filters(client: vecs.Client) -> None:
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
             query_vector=query_rec[1],
-            top_k=3,
+            limit=3,
             # bad value, unknown operator
             filters={"year": {"$no_op": 1997}},
             measure="cosine_distance",
@@ -327,7 +329,7 @@ def test_query_filters(client: vecs.Client) -> None:
         len(
             bar.query(
                 query_vector=query_rec[1],
-                top_k=3,
+                limit=3,
                 # and requires a list
                 filters={"year": {"$neq": 2000}},
                 measure="cosine_distance",
@@ -347,7 +349,7 @@ def test_create_index(client: vecs.Client) -> None:
     dim = 4
     bar = client.create_collection(name="bar", dimension=dim)
 
-    bar.create_index(metadata_config={"indexed": ["foo"]})
+    bar.create_index()
 
     assert bar.index is not None
 
@@ -357,14 +359,5 @@ def test_create_index(client: vecs.Client) -> None:
     with pytest.raises(vecs.exc.ArgError):
         bar.create_index(method="does not exist")
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(vecs.exc.ArgError):
         bar.create_index(measure="does not exist")
-
-    with pytest.raises(vecs.exc.ArgError):
-        bar.create_index(method="does not exist")
-
-    with pytest.raises(vecs.exc.ArgError):
-        bar.create_index(metadata_config={"indexed": "wrong type"})
-
-    with pytest.raises(vecs.exc.ArgError):
-        bar.create_index(metadata_config={"indexed": [9]})

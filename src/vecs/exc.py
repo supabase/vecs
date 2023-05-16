@@ -32,5 +32,6 @@ class FilterError(VecsException):
 class IndexNotFound(VecsException):
     ...
 
+
 class Unreachable(VecsException):
     ...

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 from enum import Enum
 from typing import Dict, Iterable, List, Optional, Tuple, Union, TYPE_CHECKING
 
@@ -21,10 +22,16 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import postgresql
 
-from vecs.exc import CollectionAlreadyExists, CollectionNotFound, ArgError, FilterError, ArgError, Unreachable
+from vecs.exc import (
+    CollectionAlreadyExists,
+    CollectionNotFound,
+    ArgError,
+    FilterError,
+    ArgError,
+    Unreachable,
+)
 
 
-       
 if TYPE_CHECKING:
     from vecs.client import Client
 
@@ -42,7 +49,14 @@ class IndexMethod(str, Enum):
 class IndexMeasure(str, Enum):
     cosine_distance = "cosine_distance"
     l2_distance = "l2_distance"
-    max_inner_product = "max_inner_product"
+    inner_product = "inner_product"
+
+
+INDEX_MEASURE_TO_OPS = {
+    IndexMeasure.cosine_distance: "vector_cosine_ops",
+    IndexMeasure.l2_distance: "vector_l2_ops",
+    IndexMeasure.inner_product: "vector_ip_ops",
+}
 
 
 class Collection:
@@ -76,9 +90,7 @@ class Collection:
         existing_collections = self.__class__._list_collections(self.client)
         existing_collection_names = [x.name for x in existing_collections]
         if self.name not in existing_collection_names:
-            raise CollectionNotFound(
-                "Collection with requested name not found"
-            )
+            raise CollectionNotFound("Collection with requested name not found")
         self.table.drop(self.client.engine)
         return self
 
@@ -94,7 +106,6 @@ class Collection:
         return
 
     def fetch(self, ids: Iterable[str]) -> List[Record]:
-
         if isinstance(ids, str):
             raise ArgError("ids must be a list of strings")
 
@@ -109,7 +120,6 @@ class Collection:
         return records
 
     def delete(self, ids: Iterable[str]) -> List[str]:
-
         if isinstance(ids, str):
             raise ArgError("ids must be a list of strings")
 
@@ -141,16 +151,22 @@ class Collection:
     def query(
         self,
         query_vector: Iterable[Numeric],
-        top_k: int,
+        limit: int = 10,
         filters: Optional[Dict] = None,
         measure: IndexMeasure = IndexMeasure.cosine_distance,
         include_value: bool = False,
         include_metadata: bool = False,
     ) -> Union[List[Record], List[str]]:
-        if top_k > 100:
-            raise ArgError("top_k must be <= 100")
+        if limit > 1000:
+            raise ArgError("top_k must be <= 1000")
 
         distance_lambda = None
+
+        if not self.is_indexed_for_measure(measure):
+            warnings.warn(
+                "Query does not have a covering index. See Collection.create_index"
+            )
+
         if measure == IndexMeasure.cosine_distance:
             distance_lambda = self.table.c.vec.cosine_distance
 
@@ -169,15 +185,18 @@ class Collection:
 
         stmt = select(*cols)
         if filters:
-            stmt = stmt.filter(build_filters(self.table.c.metadata, ["genre"], filters)) # type: ignore
+            stmt = stmt.filter(build_filters(self.table.c.metadata, ["genre"], filters))  # type: ignore
 
         stmt = stmt.order_by(distance_clause)
-        stmt = stmt.limit(top_k)
+        stmt = stmt.limit(limit)
 
         with self.client.Session() as sess:
-            if len(cols) == 1:
-                return [str(x) for x in sess.scalars(stmt).fetchall()]
-            return sess.execute(stmt).fetchall() or []
+            with sess.begin():
+                # index ignored if greater than n_lists
+                sess.execute(text("set local ivfflat.probes = 10"))
+                if len(cols) == 1:
+                    return [str(x) for x in sess.scalars(stmt).fetchall()]
+                return sess.execute(stmt).fetchall() or []
 
     @classmethod
     def _list_collections(cls, client: "Client") -> List["Collection"]:
@@ -213,10 +232,9 @@ class Collection:
                 relname as table_name
             from
                 pg_class pc
-
             where
                 pc.relnamespace = 'vecs'::regnamespace
-                and relname ilike 'ix_vec%'
+                and relname ilike 'ix_%'
                 and pc.relkind = 'i'
             """
             )
@@ -225,39 +243,39 @@ class Collection:
             self._index = ix_name
         return self._index
 
-    def _supports_cosine_search(self):
-        if self.index is None:
+    def is_indexed_for_measure(self, measure: IndexMeasure):
+        index_name = self.index
+        if index_name is None:
             return False
-        if self.index.startswith("ix_vec_cosine"):
+
+        ops = INDEX_MEASURE_TO_OPS.get(measure)
+        if ops is None:
+            return False
+
+        if ops in index_name:
             return True
+
         return False
 
     def create_index(
         self,
-        method: IndexMethod = IndexMethod.ivfflat,
         measure: IndexMeasure = IndexMeasure.cosine_distance,
-        metadata_config: Dict = {},
+        method: IndexMethod = IndexMethod.ivfflat,
         replace=True,
     ):
         if not method == IndexMethod.ivfflat:
+            # at time of writing, no other methods are supported by pgvector
             raise ArgError("invalid index method")
 
         if replace == False:
             if self.index is not None:
                 raise ArgError("replace is set to False but an index exists")
 
-        if not measure == IndexMeasure.cosine_distance:
-            raise NotImplementedError("only cosine distance is currently supported")
-
-        indexed = metadata_config.get("indexed") or []
-        if not isinstance(indexed, list):
-            raise ArgError("indexed must be a list of strings")
-        for field in indexed:
-            if not isinstance(field, str):
-                raise ArgError("indexed must be a list of strings")
+        ops = INDEX_MEASURE_TO_OPS.get(measure)
+        if ops is None:
+            raise ArgError("Unknown index measure")
 
         # Clone the table
-        # clone_meta = MetaData(schema='vecs')
         clone_table = build_table(f"_{self.name}", self.client.meta, self.dimension)
 
         # hacky
@@ -271,28 +289,31 @@ class Collection:
 
         with self.client.Session() as sess:
             with sess.begin():
+                n_index_seed = min(1500, n_records)
                 clone_table.create(sess.connection())
                 stmt_seed_table = clone_table.insert().from_select(
-                    self.table.c, select(self.table).order_by(func.random()).limit(1500)
+                    self.table.c,
+                    select(self.table).order_by(func.random()).limit(n_index_seed),
                 )
                 sess.execute(stmt_seed_table)
 
-                if measure == IndexMeasure.cosine_distance:
-                    n_lists = (
-                        max(n_records / 1000, 30)
-                        if n_records < 1_000_000
-                        else math.sqrt(n_records)
-                    )
+                n_lists = (
+                    max(n_records / 1000, 30)
+                    if n_records < 1_000_000
+                    else math.sqrt(n_records)
+                )
 
-                    sess.execute(
-                        text(
-                            f"create index ix_vec_cosine_{n_lists} on vecs.{clone_table.name} using ivfflat (vec vector_cosine_ops) with (lists={n_lists})"
-                        )
+                sess.execute(
+                    text(
+                        f'create index ix_{ops}_{n_lists} on vecs."{clone_table.name}" using ivfflat (vec {ops}) with (lists={n_lists})'
                     )
+                )
 
-                else:
-                    raise NotImplemented("only cosine distance is currently supported")
-                # Create the vector index
+                sess.execute(
+                    text(
+                        f'create index ix_meta on vecs."{clone_table.name}" using gin ( metadata )'
+                    )
+                )
 
                 # Fully populate the table
                 stmt = postgresql.insert(clone_table).from_select(
