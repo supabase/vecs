@@ -164,7 +164,7 @@ class Collection:
     ) -> Union[List[Record], List[str]]:
 
         if limit > 1000:
-            raise ArgError("top_k must be <= 1000")
+            raise ArgError("limit must be <= 1000")
 
         # ValueError on bad input
         try:
@@ -243,7 +243,7 @@ class Collection:
                 pg_class pc
             where
                 pc.relnamespace = 'vecs'::regnamespace
-                and relname ilike 'ix_%'
+                and relname ilike 'ix_vector%'
                 and pc.relkind = 'i'
             """
             )
