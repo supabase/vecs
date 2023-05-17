@@ -37,7 +37,12 @@ def read_package_variable(key, filename="__init__.py"):
 check_python_version()
 
 
-REQUIRES = ["pgvector==0.1.*", "sqlalchemy==2.*", "psycopg2-binary==2.9.*"]
+REQUIRES = [
+    "pgvector==0.1.*",
+    "sqlalchemy==2.*",
+    "psycopg2-binary==2.9.*",
+    "flupy==1.*",
+]
 
 
 setuptools.setup(
