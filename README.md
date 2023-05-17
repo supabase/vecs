@@ -150,10 +150,9 @@ If you aren't sure which to use, stick with the default (cosine_distance) by omi
 docs.create_index()
 ```
 
-!!! note
-    The time required to create an index grows with the number of records and size of vectors.
-    For a few thousand records expect sub-minute a response in under a minute. It may take a few
-    minutes for larger collections.
+Note that The time required to create an index grows with the number of records and size of vectors.
+For a few thousand records expect sub-minute a response in under a minute. It may take a few
+minutes for larger collections.
 
 ## Query
 
@@ -176,14 +175,13 @@ docs.query(
 
 Which returns a list of vector record `ids`.
 
-!!! note
-    Indexes are essential for good performance. See [creating an index](#create-an-index) for more info.
+Indexes are essential for good performance. See [creating an index](#create-an-index) for more info.
 
-    If you do not create an index, every query will return a warning
-    ```
-    query does not have a covering index for cosine_similarity. See Collection.create_index
-    ```
-    that incldues the `IndexMeasure` you should index.
+If you do not create an index, every query will return a warning
+```
+query does not have a covering index for cosine_similarity. See Collection.create_index
+```
+that incldues the `IndexMeasure` you should index.
 
 
 ### Metadata Filtering
