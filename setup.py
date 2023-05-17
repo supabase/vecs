@@ -46,7 +46,7 @@ setuptools.setup(
     description="pgvector client",
     url="https://github.com/olirice/vecs",
     author="Oliver Rice",
-    packages=setuptools.find_packages("src"),
+    packages=setuptools.find_packages("src", exclude="tests"),
     package_dir={"": "src"},
     package_data={"": ["py.typed"]},
     tests_require=["pytest"],
