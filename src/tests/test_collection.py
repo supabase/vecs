@@ -299,13 +299,13 @@ def test_query_filters(client: vecs.Client) -> None:
                 filters={
                     "$or": [
                         {"year": {"$eq": 1997}},
-                        {"year": {"$eq": 1997}},
+                        {"year": {"$eq": 2001}},
                     ]
                 },
                 measure="cosine_distance",
             )
         )
-        == 1
+        == 2
     )
 
     with pytest.raises(vecs.exc.FilterError):
