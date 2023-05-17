@@ -247,8 +247,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../quickstart/" class="md-nav__link">
-        Quickstart
+      <a href="../api/" class="md-nav__link">
+        API
       </a>
     </li>
   
@@ -384,63 +384,12 @@
       
       
         <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-          Guides
+          Integrations
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
-          <span class="md-nav__icon md-icon"></span>
-          Guides
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../guides_insert/" class="md-nav__link">
-        Insert data
-      </a>
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-      
-      
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
-      
-      
-      
-        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
-          Integrations
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           Integrations
         </label>
@@ -481,17 +430,17 @@
       
         
       
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
       
       
       
-        <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
           Support
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           Support
         </label>
@@ -505,20 +454,6 @@
     <li class="md-nav__item">
       <a href="../support_changelog/" class="md-nav__link">
         Changelog
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../support_limits/" class="md-nav__link">
-        Limits
       </a>
     </li>
   
@@ -568,6 +503,20 @@
 
 
 <h1 id="indexes">Indexes</h1>
+<p>Indexes are tools for optimizing query performance of a <a href="/vecs/concepts_collections">collection</a>.</p>
+<p>Collections can be <a href="/vecs/quickstart/#query">queried</a> without an index, but that will emit a python warning and should never be done in produciton.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>query does not have a covering index for cosine_similarity. See Collection.create_index
+</span></code></pre></div>
+<p>as each query vector must be checked against every record in the collection. When the number of dimensions and/or number of records becomes large, that becomes extremely slow and computationally expensive.</p>
+<p>An index is a heuristic datastructure that pre-computes distances among key points in the vector space. It is smaller and can be traversed more quickly than the whole collection enabling <strong>much</strong> more performant seraching.</p>
+<p>Only one index may exist per-collection. An index optimizes a collection for searching according to a selected distance measure.</p>
+<p>Available options distance measure are:</p>
+<ul>
+<li>cosine distance</li>
+<li>l2 distance</li>
+<li>max inner product</li>
+</ul>
+<p>If you aren't sure which to use, stick with the default (cosine_distance) by omitting the parameter when creating indexes and querying.</p>
 
 
 
