@@ -14,19 +14,16 @@ theme:
         accent: red
 nav:
   - Quickstart:
-    - quickstart.md
-    - hosting.md
+    - API: api.md
+    - Hosting: hosting.md
   - Concepts:
     - Collections: concepts_collections.md
     - Indexes: concepts_indexes.md
     - Metadata: concepts_metadata.md
-  - Guides:
-    - Insert data: guides_insert.md
   - Integrations:
     - OpenAI: integrations_openai.md
   - Support:
     - Changelog: support_changelog.md
-    - Limits: support_limits.md
 
 markdown_extensions:
   - admonition
