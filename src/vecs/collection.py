@@ -381,7 +381,7 @@ def build_filters(json_col: Column, filters: Dict):
             if len(value) > 1:
                 raise FilterError("only operator permitted")
             for operator, clause in value.items():
-                if operator not in ("$eq", "$neq", "$lt"):
+                if operator not in ("$eq", "$ne", "$lt", "$lte", "$gt", "$gte"):
                     raise FilterError("unknown operator")
 
                 matches_value = cast(clause, postgresql.JSONB)
@@ -389,11 +389,20 @@ def build_filters(json_col: Column, filters: Dict):
                 if operator == "$eq":
                     return json_col.op("->")(key) == matches_value
 
-                if operator == "$neq":
+                if operator == "$ne":
                     return json_col.op("->")(key) != matches_value
 
                 if operator == "$lt":
                     return json_col.op("->")(key) < matches_value
+
+                if operator == "$lte":
+                    return json_col.op("->")(key) <= matches_value
+
+                if operator == "$gt":
+                    return json_col.op("->")(key) > matches_value
+
+                if operator == "$gte":
+                    return json_col.op("->")(key) >= matches_value
 
                 else:
                     raise Unreachable()

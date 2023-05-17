@@ -313,7 +313,7 @@ def test_query_filters(client: vecs.Client) -> None:
             query_vector=query_rec[1],
             limit=3,
             # bad value, too many conditions
-            filters={"year": {"$eq": 1997, "$neq": 1998}},
+            filters={"year": {"$eq": 1997, "$ne": 1998}},
             measure="cosine_distance",
         )
 
@@ -326,18 +326,60 @@ def test_query_filters(client: vecs.Client) -> None:
             measure="cosine_distance",
         )
 
-    # neq
+    # ne
     assert (
         len(
             bar.query(
                 query_vector=query_rec[1],
                 limit=3,
                 # and requires a list
-                filters={"year": {"$neq": 2000}},
+                filters={"year": {"$ne": 2000}},
                 measure="cosine_distance",
             )
         )
         == 3
+    )
+
+    # lte
+    assert (
+        len(
+            bar.query(
+                query_vector=query_rec[1],
+                limit=3,
+                # and requires a list
+                filters={"year": {"$lte": 1989}},
+                measure="cosine_distance",
+            )
+        )
+        == 2
+    )
+
+    # gt
+    assert (
+        len(
+            bar.query(
+                query_vector=query_rec[1],
+                limit=3,
+                # and requires a list
+                filters={"year": {"$gt": 2019}},
+                measure="cosine_distance",
+            )
+        )
+        == 1
+    )
+
+    # gte
+    assert (
+        len(
+            bar.query(
+                query_vector=query_rec[1],
+                limit=3,
+                # and requires a list
+                filters={"year": {"$gte": 2019}},
+                measure="cosine_distance",
+            )
+        )
+        == 2
     )
 
 
