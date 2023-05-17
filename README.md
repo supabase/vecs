@@ -19,7 +19,7 @@
 
 `vecs` is a python client for managing and querying vector stores in PostgreSQL with the [pgvector extension](https://github.com/pgvector/pgvector). This guide will help you get started with using vecs.
 
-If you don't have a Postgres database with the pgvector ready, see [hosting](docs/hosting.md) for easy options.
+If you don't have a Postgres database with the pgvector ready, see [hosting](https://olirice.github.io/vecs/hosting/) for easy options.
 
 ## Installation
 
@@ -201,5 +201,5 @@ docs.query(
 )
 ```
 
-For a complete reference, see the [metadata guide](docs/concepts_metadata.md).
+For a complete reference, see the [metadata guide](https://olirice.github.io/vecs/concepts_metadata/).
 
