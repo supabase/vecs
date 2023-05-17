@@ -50,7 +50,7 @@ Now that we have our embeddings, we can insert them into a PostgreSQL database u
 ```python
 import vecs
 
-DB_CONNECTION = "postgresql://postgres:vault_check1**1@db.qfjzkwvgfpgesiklpwff.supabase.co:5432/postgres"
+DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
 
 # create vector store client
 vx = vecs.Client(DB_CONNECTION)
