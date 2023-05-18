@@ -36,24 +36,16 @@ vx = vecs.create_client(DB_CONNECTION)
 You can create a collection to store vectors specifying the collections name and the number of dimensions in the vectors you intend to store.
 
 ``` python
-import vecs
-
-# create vector store client
-vx = vecs.create_client("postgresql://<user>:<password>@<host>:<port>/<db_name>")
-
-docs = vx.create_collection(name="docs", dimension=384)
+docs = vx.create_collection(name="docs", dimension=3)
 ```
+
+If another collection exists with the same name,
 
 ## Get an existing collection
 
 To access a previously created collection, use `get_collection` to retrieve it by name
 
 ``` python
-import vecs
-
-# create vector store client
-vs = vecs.create_client("postgresql://<user>:<password>@<host>:<port>/<db_name>")
-
 docs = vx.get_collection(name="docs")
 ```
 
@@ -62,14 +54,6 @@ docs = vx.get_collection(name="docs")
 `vecs` combines the concepts of "insert" and "update" into "upsert". Upserting records adds them to the collection if the `id` is not present, or updates the existing record if the `id` does exist.
 
 ```python
-import vecs
-
-# create vector store client
-vx = vecs.Client("postgresql://<user>:<password>@<host>:<port>/<db_name>")
-
-# create a collection named docs with 3 dimensional vectors
-docs = vx.create_collection(name="docs", dimension=3)
-
 # add records to the collection
 docs.upsert(
     vectors=[
@@ -81,12 +65,11 @@ docs.upsert(
         (
          "vec1",
          [0.7, 0.8, 0.9],
-         {"year": "2012"}
+         {"year": 2012}
         )
     ]
 )
 ```
-
 
 ## Create an index
 
@@ -103,14 +86,6 @@ Only one index may exist per-collection. By default, creating an index will repl
 To create an index:
 
 ```python
-import vecs
-
-# create vector store client
-vx = vecs.Client("postgresql://<user>:<password>@<host>:<port>/<db_name>")
-
-# create a collection named docs with 3 dimensional vectors
-docs = vx.create_collection(name="docs", dimension=3)
-
 ##
 # INSERT RECORDS HERE
 ##
@@ -146,6 +121,17 @@ Given a collection `docs` with several records:
 
 The simplest form of search is to provide a query vector.
 
+!!! note
+    Indexes are essential for good performance. See [creating an index](#create-an-index) for more info.
+
+    If you do not create an index, every query will return a warning
+    ```
+    query does not have a covering index for cosine_similarity. See Collection.create_index
+    ```
+    that incldues the `IndexMeasure` you should index.
+
+
+
 ```python
 docs.query(
     query_vector=[0.4,0.5,0.6],  # required
@@ -159,15 +145,6 @@ docs.query(
 
 Which returns a list of vector record `ids`.
 
-!!! note
-    Indexes are essential for good performance. See [creating an index](#create-an-index) for more info.
-
-    If you do not create an index, every query will return a warning
-    ```
-    query does not have a covering index for cosine_similarity. See Collection.create_index
-    ```
-    that incldues the `IndexMeasure` you should index.
-
 
 ### Metadata Filtering
 
@@ -180,7 +157,7 @@ In context:
 ```python
 docs.query(
     query_vector=[0.4,0.5,0.6],
-    filters={"year": {"$eq": 2005}}, # metadata filters
+    filters={"year": {"$eq": 2012}}, # metadata filters
 )
 ```
 
