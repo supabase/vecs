@@ -300,7 +300,7 @@ class Collection:
 
         with self.client.Session() as sess:
             with sess.begin():
-                n_index_seed = min(1500, n_records)
+                n_index_seed = min(5000, n_records)
                 clone_table.create(sess.connection())
                 stmt_seed_table = clone_table.insert().from_select(
                     self.table.c,
