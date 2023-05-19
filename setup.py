@@ -49,7 +49,7 @@ setuptools.setup(
     name=read_package_variable("__project__"),
     version=read_package_variable("__version__"),
     description="pgvector client",
-    url="https://github.com/olirice/vecs",
+    url="https://github.com/supabase/vecs",
     author="Oliver Rice",
     packages=setuptools.find_packages("src", exclude="tests"),
     package_dir={"": "src"},

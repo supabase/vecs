@@ -5,21 +5,21 @@
 <p>
     <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="Python version" height="18"></a>
     <a href="https://badge.fury.io/py/vecs"><img src="https://badge.fury.io/py/vecs.svg" alt="PyPI version" height="18"></a>
-    <a href="https://github.com/olirice/vecs/blob/master/LICENSE"><img src="https://img.shields.io/pypi/l/markdown-subtemplate.svg" alt="License" height="18"></a>
+    <a href="https://github.com/supabase/vecs/blob/master/LICENSE"><img src="https://img.shields.io/pypi/l/markdown-subtemplate.svg" alt="License" height="18"></a>
     <a href="https://pypi.org/project/vecs/"><img src="https://img.shields.io/pypi/dm/vecs.svg" alt="Download count" height="18"></a>
 </p>
 
 ---
 
-**Documentation**: <a href="https://olirice.github.io/vecs/api/" target="_blank">https://olirice.github.io/vecs/api/</a>
+**Documentation**: <a href="https://supabase.github.io/vecs/api/" target="_blank">https://supabase.github.io/vecs/api/</a>
 
-**Source Code**: <a href="https://github.com/olirice/vecs" target="_blank">https://github.com/olirice/vecs</a>
+**Source Code**: <a href="https://github.com/supabase/vecs" target="_blank">https://github.com/supabase/vecs</a>
 
 ---
 
 `vecs` is a python client for managing and querying vector stores in PostgreSQL with the [pgvector extension](https://github.com/pgvector/pgvector). This guide will help you get started with using vecs.
 
-If you don't have a Postgres database with the pgvector ready, see [hosting](https://olirice.github.io/vecs/hosting/) for easy options.
+If you don't have a Postgres database with the pgvector ready, see [hosting](https://supabase.github.io/vecs/hosting/) for easy options.
 
 ## Installation
 
@@ -35,7 +35,7 @@ pip install vecs
 
 ## Usage
 
-Visit the [quickstart guide](https://olirice.github.io/vecs/api/) for more complete info.
+Visit the [quickstart guide](https://supabase.github.io/vecs/api/) for more complete info.
 
 ```python
 import vecs

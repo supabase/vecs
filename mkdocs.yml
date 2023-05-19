@@ -1,9 +1,9 @@
 site_name: vecs
-site_url: https://olirice.github.io/vecs
+site_url: https://supabase.github.io/vecs
 site_description: Vector Database Client for pgvector
 
-repo_name: olirice/vecs
-repo_url: https://github.com/olirice/vecs
+repo_name: supabase/vecs
+repo_url: https://github.com/supabase/vecs
 
 theme:
     name: 'material'
