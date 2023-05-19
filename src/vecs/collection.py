@@ -100,14 +100,20 @@ class Collection:
         return self
 
     def upsert(self, vectors: Iterable[Tuple[str, Iterable[Numeric], Metadata]]):
-        stmt = postgresql.insert(self.table).values(vectors)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[self.table.c.id],
-            set_=dict(vec=stmt.excluded.vec, metadata=stmt.excluded.metadata),
-        )
+
+        chunk_size = 500
+
         with self.client.Session() as sess:
             with sess.begin():
-                sess.execute(stmt)
+                for chunk in flu(vectors).chunk(chunk_size):
+                    stmt = postgresql.insert(self.table).values(chunk)
+                    stmt = stmt.on_conflict_do_update(
+                        index_elements=[self.table.c.id],
+                        set_=dict(
+                            vec=stmt.excluded.vec, metadata=stmt.excluded.metadata
+                        ),
+                    )
+                    sess.execute(stmt)
         return
 
     def fetch(self, ids: Iterable[str]) -> List[Record]:
