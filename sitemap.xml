@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://olirice.github.io/vecs/api/</loc>
-         <lastmod>2023-05-18</lastmod>
+         <loc>https://supabase.github.io/vecs/api/</loc>
+         <lastmod>2023-05-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://olirice.github.io/vecs/concepts_collections/</loc>
-         <lastmod>2023-05-18</lastmod>
+         <loc>https://supabase.github.io/vecs/concepts_collections/</loc>
+         <lastmod>2023-05-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://olirice.github.io/vecs/concepts_indexes/</loc>
-         <lastmod>2023-05-18</lastmod>
+         <loc>https://supabase.github.io/vecs/concepts_indexes/</loc>
+         <lastmod>2023-05-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://olirice.github.io/vecs/concepts_metadata/</loc>
-         <lastmod>2023-05-18</lastmod>
+         <loc>https://supabase.github.io/vecs/concepts_metadata/</loc>
+         <lastmod>2023-05-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://olirice.github.io/vecs/hosting/</loc>
-         <lastmod>2023-05-18</lastmod>
+         <loc>https://supabase.github.io/vecs/hosting/</loc>
+         <lastmod>2023-05-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://olirice.github.io/vecs/integrations_openai/</loc>
-         <lastmod>2023-05-18</lastmod>
+         <loc>https://supabase.github.io/vecs/integrations_openai/</loc>
+         <lastmod>2023-05-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://olirice.github.io/vecs/support_changelog/</loc>
-         <lastmod>2023-05-18</lastmod>
+         <loc>https://supabase.github.io/vecs/support_changelog/</loc>
+         <lastmod>2023-05-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
