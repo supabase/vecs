@@ -3,7 +3,7 @@ from vecs.client import Client
 from vecs.collection import Collection, IndexMeasure, IndexMethod
 
 __project__ = "vecs"
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 
 __all__ = ["IndexMethod", "IndexMeasure", "Collection", "Client", "exc"]

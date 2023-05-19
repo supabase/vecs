@@ -309,9 +309,9 @@ class Collection:
                 sess.execute(stmt_seed_table)
 
                 n_lists = (
-                    max(n_records / 1000, 30)
+                    int(max(n_records / 1000, 30))
                     if n_records < 1_000_000
-                    else math.sqrt(n_records)
+                    else int(math.sqrt(n_records))
                 )
 
                 unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
