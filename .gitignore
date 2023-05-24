@@ -3,6 +3,7 @@
 *.egg-info
 __pycache__
 .ipynb_checkpoints
+.DS_STORE
 
 # pyenv
 .python-version
