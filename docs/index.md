@@ -81,4 +81,7 @@ docs.query(
 )
 
 # Returns: ["vec1"]
+
+# Disconnect from the database
+vx.disconnect()
 ```
