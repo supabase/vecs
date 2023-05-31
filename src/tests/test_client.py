@@ -38,3 +38,16 @@ def test_delete_collection(client: vecs.Client) -> None:
 
     with pytest.raises(vecs.exc.CollectionNotFound):
         client.delete_collection("books")
+
+
+def test_dispose(client: vecs.Client) -> None:
+
+    # Connect and disconnect in context manager
+    with client as connected_client:
+        client.create_collection(name="books", dimension=1)
+        collections = client.list_collections()
+        assert len(collections) == 1
+
+    # engine.dispose re-creates the connection pool so
+    # confirm that the client can still re-connect transparently
+    assert len(client.list_collections()) == 1

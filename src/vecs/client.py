@@ -50,3 +50,14 @@ class Client:
 
         Collection(name, -1, self)._drop()
         return
+
+    def disconnect(self) -> None:
+        self.engine.dispose()
+        return
+
+    def __enter__(self) -> "Client":
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()
+        return
