@@ -20,8 +20,7 @@ pip install vecs
 
 ## Connecting
 
-Before you can interact with vecs, create the client to communicate with Postgres.
-
+Before you can interact with vecs, create the client to communicate with Postgres. If you haven't started a Postgres instance yet, see [hosting](hosting.md).
 ``` python
 import vecs
 

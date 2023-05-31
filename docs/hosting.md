@@ -155,4 +155,4 @@ i.e.
 postgresql://postgres:password@localhost:5019/vecs_db
 ```
 
-Keep that connection string secret and safe. Its your `DB_CONNECTION` in the [quickstart guide](api.md),
+Keep that connection string secret and safe. Its your `DB_CONNECTION` in the [quickstart guide](api.md)
