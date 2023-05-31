@@ -13,7 +13,8 @@ theme:
         primary: grey
         accent: red
 nav:
-  - Quickstart:
+  - Introduction: index.md
+  - Guides:
     - API: api.md
     - Hosting: hosting.md
   - Concepts:
@@ -35,3 +36,5 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
