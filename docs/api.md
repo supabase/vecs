@@ -1,4 +1,4 @@
-# Quickstart
+# API
 
 `vecs` is a python client for managing and querying vector stores in PostgreSQL with the [pgvector extension](https://github.com/pgvector/pgvector). This guide will help you get started with using vecs.
 
@@ -20,8 +20,7 @@ pip install vecs
 
 ## Connecting
 
-Before you can interact with vecs, create the client to communicate with Postgres.
-
+Before you can interact with vecs, create the client to communicate with Postgres. If you haven't started a Postgres instance yet, see [hosting](hosting.md).
 ``` python
 import vecs
 
@@ -39,7 +38,8 @@ You can create a collection to store vectors specifying the collections name and
 docs = vx.create_collection(name="docs", dimension=3)
 ```
 
-If another collection exists with the same name,
+!!! note
+    If another collection exists with the same name, use [get_collection](#get-an-existing-collection) to retrieve it.
 
 ## Get an existing collection
 
