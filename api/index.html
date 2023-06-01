@@ -366,6 +366,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#disconnect" class="md-nav__link">
+    Disconnect
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -692,6 +699,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#disconnect" class="md-nav__link">
+    Disconnect
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -830,6 +844,22 @@ that incldues the <code>IndexMeasure</code> you should index.</p>
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">)</span>
 </span></code></pre></div>
 <p>For a complete reference, see the <a href="../concepts_metadata/">metadata guide</a>.</p>
+<h3 id="disconnect">Disconnect</h3>
+<p>When you're done with a collection, be sure to disconnect the client from the database.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">vx</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+</span></code></pre></div>
+<p>alternatively, use the client as a context manager and it will automatically close the connection on exit.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">import</span> <span class="nn">vecs</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">DB_CONNECTION</span> <span class="o">=</span> <span class="s2">&quot;postgresql://&lt;user&gt;:&lt;password&gt;@&lt;host&gt;:&lt;port&gt;/&lt;db_name&gt;&quot;</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># create vector store client</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">with</span> <span class="n">vecs</span><span class="o">.</span><span class="n">create_client</span><span class="p">(</span><span class="n">DB_CONNECTION</span><span class="p">)</span> <span class="k">as</span> <span class="n">vx</span><span class="p">:</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="c1"># do some work here</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="k">pass</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="c1"># connections are now closed</span>
+</span></code></pre></div>
 
 
 
