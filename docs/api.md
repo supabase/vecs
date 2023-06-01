@@ -162,3 +162,28 @@ docs.query(
 ```
 
 For a complete reference, see the [metadata guide](concepts_metadata.md).
+
+
+### Disconnect
+
+When you're done with a collection, be sure to disconnect the client from the database.
+
+```python
+vx.disconnect()
+```
+
+alternatively, use the client as a context manager and it will automatically close the connection on exit.
+
+
+```python
+import vecs
+
+DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
+
+# create vector store client
+with vecs.create_client(DB_CONNECTION) as vx:
+    # do some work here
+    pass
+
+# connections are now closed
+```
