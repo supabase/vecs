@@ -6,7 +6,7 @@ Collections can be [queried](/vecs/api/#query) at any time, but should be [index
 
 Each vector record has the form:
 
-```
+```python
 Record (
     id: String
     vec: Numeric[]

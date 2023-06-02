@@ -8,7 +8,7 @@ First, you need to set up your environment. You will need Python 3.7 with the `v
 
 You can install the necessary Python libraries using pip:
 
-```
+```sh
 pip install vecs openai
 ```
 
