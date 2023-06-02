@@ -1,0 +1,41 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+            python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+            postgres-version: ['15.1.0.87']
+
+    services:
+
+      postgres:
+        image: supabase/postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_DB: vecs_db
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: alem_user
+          POSTGRES_PASSWORD: password
+        ports:
+        - 5611:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: install
+      run: |
+        pip install --upgrade pip
+        pip install wheel
+        pip install -e ".[dev]"
+
+    - name: test with coverage
+      run: |
+        pytest
