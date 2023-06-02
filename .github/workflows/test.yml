@@ -16,7 +16,6 @@ jobs:
         image: supabase/postgres:${{ matrix.postgres-version }}
         env:
           POSTGRES_DB: vecs_db
-          POSTGRES_HOST: localhost
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
         ports:
