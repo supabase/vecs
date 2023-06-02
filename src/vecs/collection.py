@@ -337,7 +337,7 @@ class Collection:
                         f"""
                         create index ix_meta_{unique_string}
                           on vecs."{clone_table.name}"
-                          using gin ( metadata )
+                          using gin ( metadata jsonb_path_ops )
                         """
                     )
                 )
@@ -385,15 +385,16 @@ def build_filters(json_col: Column, filters: Dict):
 
         if isinstance(value, dict):
             if len(value) > 1:
-                raise FilterError("only operator permitted")
+                raise FilterError("only one operator permitted")
             for operator, clause in value.items():
                 if operator not in ("$eq", "$ne", "$lt", "$lte", "$gt", "$gte"):
                     raise FilterError("unknown operator")
 
-                matches_value = cast(clause, postgresql.JSONB)
-
                 if operator == "$eq":
-                    return json_col.op("->")(key) == matches_value
+                    contains_value = cast({key: clause}, postgresql.JSONB)
+                    return json_col.op("@>")(contains_value)
+
+                matches_value = cast(clause, postgresql.JSONB)
 
                 if operator == "$ne":
                     return json_col.op("->")(key) != matches_value
