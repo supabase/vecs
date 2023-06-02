@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name,no-member
 
 import json
+import os
 import subprocess
 import time
 from typing import Generator
@@ -20,10 +21,14 @@ def maybe_start_pg() -> Generator[None, None, None]:
     to using the PYTEST_DB connection string"""
 
     container_name = "vecs_pg"
-    image = "supabase/postgres:15.1.0.74"
+    image = "supabase/postgres:15.1.0.87"
 
     connection_template = "postgresql://{user}:{pw}@{host}:{port:d}/{db}"
     conn_args = parse(connection_template, PYTEST_DB)
+
+    if "GITHUB_SHA" in os.environ:
+        yield
+        return
 
     try:
         is_running = (

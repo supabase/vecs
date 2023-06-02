@@ -1,9 +1,16 @@
 # vecs
 
 <p>
+    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="Python version" height="18"></a>
+    <a href="https://github.com/supabase/vecs/actions">
+        <img src="https://github.com/supabase/vecs/workflows/tests/badge.svg" alt="test status" height="18">
+    </a>
+    <a href="https://github.com/supabase/vecs/actions">
+        <img src="https://github.com/supabase/vecs/workflows/pre-commit/badge.svg" alt="Pre-commit Status" height="18">
+    </a>
+</p>
 
 <p>
-    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="Python version" height="18"></a>
     <a href="https://badge.fury.io/py/vecs"><img src="https://badge.fury.io/py/vecs.svg" alt="PyPI version" height="18"></a>
     <a href="https://github.com/supabase/vecs/blob/master/LICENSE"><img src="https://img.shields.io/pypi/l/markdown-subtemplate.svg" alt="License" height="18"></a>
     <a href="https://pypi.org/project/vecs/"><img src="https://img.shields.io/pypi/dm/vecs.svg" alt="Download count" height="18"></a>
