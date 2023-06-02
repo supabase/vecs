@@ -36,7 +36,7 @@ Requires:
 
 You can install vecs using pip:
 
-```bash
+```sh
 pip install vecs
 ```
 

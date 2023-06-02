@@ -41,7 +41,7 @@ Visit the [quickstart guide](api.md) for how to get started.
 
 ### Install
 
-```bash
+```sh
 pip install vecs
 ```
 
