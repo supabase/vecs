@@ -4,7 +4,7 @@ Indexes are tools for optimizing query performance of a [collection](/vecs/conce
 
 Collections can be [queried](/vecs/api/#query) without an index, but that will emit a python warning and should never be done in produciton.
 
-```
+```text
 query does not have a covering index for cosine_similarity. See Collection.create_index
 ```
 

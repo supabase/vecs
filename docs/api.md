@@ -21,7 +21,7 @@ pip install vecs
 ## Connecting
 
 Before you can interact with vecs, create the client to communicate with Postgres. If you haven't started a Postgres instance yet, see [hosting](hosting.md).
-``` python
+```python
 import vecs
 
 DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
@@ -34,7 +34,7 @@ vx = vecs.create_client(DB_CONNECTION)
 
 You can create a collection to store vectors specifying the collections name and the number of dimensions in the vectors you intend to store.
 
-``` python
+```python
 docs = vx.create_collection(name="docs", dimension=3)
 ```
 
@@ -45,7 +45,7 @@ docs = vx.create_collection(name="docs", dimension=3)
 
 To access a previously created collection, use `get_collection` to retrieve it by name
 
-``` python
+```python
 docs = vx.get_collection(name="docs")
 ```
 
@@ -104,7 +104,7 @@ which correspond to different methods for comparing query vectors to the vectors
 
 If you aren't sure which to use, stick with the default (cosine_distance) by omitting the parameter i.e.
 
-```
+```python
 docs.create_index()
 ```
 
@@ -125,7 +125,7 @@ The simplest form of search is to provide a query vector.
     Indexes are essential for good performance. See [creating an index](#create-an-index) for more info.
 
     If you do not create an index, every query will return a warning
-    ```
+    ```text
     query does not have a covering index for cosine_similarity. See Collection.create_index
     ```
     that incldues the `IndexMeasure` you should index.

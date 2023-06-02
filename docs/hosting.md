@@ -34,11 +34,11 @@ On the project page, navigate to `Settings` > `Database` > `Database Settings`
 
 and substitue those fields into the conenction string
 
-```
+```text
 postgresql://<user>:<password>@<host>:<port>/<db_name>
 ```
 i.e.
-```
+```text
 postgres://postgres:[YOUR PASSWORD]@db.cvykdyhlwwwojivopztl.supabase.co:5432/postgres
 ```
 
@@ -55,13 +55,13 @@ To install the CLI, use the relevant system instructions below
 
 === "macOS"
 
-    ```
+    ```sh
     brew install supabase/tap/supabase
     ```
 
 === "Windows"
 
-    ```
+    ```sh
     scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
     scoop install supabase
     ```
@@ -70,21 +70,21 @@ To install the CLI, use the relevant system instructions below
 
     Linux packages are provided in Releases. To install, download the .apk/.deb/.rpm file depending on your package manager and run one of the following:
 
-    ```
+    ```sh
     sudo apk add --allow-untrusted <...>.apk
     ```
     or
-    ```
+    ```sh
     sudo dpkg -i <...>.deb
     ```
     or
-    ```
+    ```sh
     sudo rpm -i <...>.rpm
     ```
 
 === "npm"
 
-    ```
+    ```shell
     npm install supabase --save-dev
     ```
 
@@ -98,13 +98,13 @@ supabase init
 
 next start the application using:
 
-```
+```sh
 supabase start
 ```
 
 which will download the latest Supabase containers and provide a URL to each service:
 
-```
+```text
 Seeding data supabase/seed.sql...me...
 Started supabase local development setup.
 
@@ -120,7 +120,7 @@ service_role key: eyJhbGciOiJIUzI1NiIsInR5cClJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
 
 The service we need for `vecs` is `DB URL`. Note it down for use as our `DB_CONNECTION`
 
-```
+```text
 postgresql://<user>:<password>@<host>:<port>/<db_name>
 ```
 
@@ -147,11 +147,11 @@ docker run --rm -d \
 #### Connection Info
 Substitue the values from the previous section into the postgres conenction string
 
-```
+```text
 postgresql://<user>:<password>@<host>:<port>/<db_name>
 ```
 i.e.
-```
+```text
 postgresql://postgres:password@localhost:5019/vecs_db
 ```
 
