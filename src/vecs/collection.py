@@ -613,27 +613,33 @@ def build_filters(json_col: Column, filters: Dict):
                 if operator not in ("$eq", "$ne", "$lt", "$lte", "$gt", "$gte"):
                     raise FilterError("unknown operator")
 
-                if operator == "$eq":
+                # equality of singular values can take advantage of the metadata index
+                # using containment operator. Containment can not be used to test equality
+                # of lists or dicts so we restrict to single values with a __len__ check.
+                if operator == "$eq" and not hasattr(clause, "__len__"):
                     contains_value = cast({key: clause}, postgresql.JSONB)
                     return json_col.op("@>")(contains_value)
 
                 matches_value = cast(clause, postgresql.JSONB)
 
-                if operator == "$ne":
+                # handles non-singular values
+                if operator == "$eq":
+                    return json_col.op("->")(key) == matches_value
+
+                elif operator == "$ne":
                     return json_col.op("->")(key) != matches_value
 
-                if operator == "$lt":
+                elif operator == "$lt":
                     return json_col.op("->")(key) < matches_value
 
-                if operator == "$lte":
+                elif operator == "$lte":
                     return json_col.op("->")(key) <= matches_value
 
-                if operator == "$gt":
+                elif operator == "$gt":
                     return json_col.op("->")(key) > matches_value
 
-                if operator == "$gte":
+                elif operator == "$gte":
                     return json_col.op("->")(key) >= matches_value
-
                 else:
                     raise Unreachable()
 
