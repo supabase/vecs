@@ -383,6 +383,104 @@ def test_query_filters(client: vecs.Client) -> None:
     )
 
 
+def test_filters_eq(client: vecs.Client) -> None:
+    bar = client.create_collection(name="bar", dimension=4)
+
+    records = [
+        ("0", [0, 0, 0, 0], {"a": 1}),
+        ("1", [1, 0, 0, 0], {"a": 2}),
+        ("2", [1, 1, 0, 0], {"a": 3}),
+        ("3", [1, 1, 1, 0], {"b": [1, 2]}),
+        ("4", [1, 1, 1, 1], {"b": [1, 3]}),
+        ("5", [1, 1, 1, 1], {"b": 1}),
+        ("6", [1, 1, 1, 1], {"c": {"d": "hi"}}),
+    ]
+
+    bar.upsert(records)
+    bar.create_index()
+
+    # Simple equality of number: has match
+    assert bar.query(
+        query_vector=[0, 0, 0, 0],
+        limit=3,
+        filters={"a": {"$eq": 1}},
+    ) == ["0"]
+
+    # Simple equality of number: no match
+    assert (
+        bar.query(
+            query_vector=[0, 0, 0, 0],
+            limit=3,
+            filters={"a": {"$eq": 5}},
+        )
+        == []
+    )
+
+    # Equality of array to value: no match
+    assert (
+        bar.query(
+            query_vector=[0, 0, 0, 0],
+            limit=3,
+            filters={"a": {"$eq": [1]}},
+        )
+        == []
+    )
+
+    # Equality of value to array: no match
+    assert (
+        bar.query(
+            query_vector=[0, 0, 0, 0],
+            limit=3,
+            filters={"b": {"$eq": 2}},
+        )
+        == []
+    )
+
+    # Equality of sub-array to array: no match
+    assert (
+        bar.query(
+            query_vector=[0, 0, 0, 0],
+            limit=3,
+            filters={"b": {"$eq": [1]}},
+        )
+        == []
+    )
+
+    # Equality of array to array: match
+    assert bar.query(
+        query_vector=[0, 0, 0, 0],
+        limit=3,
+        filters={"b": {"$eq": [1, 2]}},
+    ) == ["3"]
+
+    # Equality of scalar to dict (key matches): no match
+    assert (
+        bar.query(
+            query_vector=[0, 0, 0, 0],
+            limit=3,
+            filters={"c": {"$eq": "d"}},
+        )
+        == []
+    )
+
+    # Equality of scalar to dict (value matches): no match
+    assert (
+        bar.query(
+            query_vector=[0, 0, 0, 0],
+            limit=3,
+            filters={"c": {"$eq": "hi"}},
+        )
+        == []
+    )
+
+    # Equality of dict to dict: match
+    assert bar.query(
+        query_vector=[0, 0, 0, 0],
+        limit=3,
+        filters={"c": {"$eq": {"d": "hi"}}},
+    ) == ["6"]
+
+
 def test_access_index(client: vecs.Client) -> None:
     dim = 4
     bar = client.create_collection(name="bar", dimension=dim)

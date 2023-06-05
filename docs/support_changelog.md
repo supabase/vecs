@@ -10,3 +10,4 @@ Initial release
 - Added `vecs.Collection.disconnect()` to drop database connection
 - `vecs.Client` can be used as a context maanger to auto-close connections
 - Added docstrings to all methods, functions and modules
+- Uses (indexed) containment operator `@>` for metadata equality filters where possible

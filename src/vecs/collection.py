@@ -543,7 +543,7 @@ class Collection:
                         f"""
                         create index ix_meta_{unique_string}
                           on vecs."{clone_table.name}"
-                          using gin ( metadata )
+                          using gin ( metadata jsonb_path_ops )
                         """
                     )
                 )
@@ -608,31 +608,38 @@ def build_filters(json_col: Column, filters: Dict):
 
         if isinstance(value, dict):
             if len(value) > 1:
-                raise FilterError("only operator permitted")
+                raise FilterError("only one operator permitted")
             for operator, clause in value.items():
                 if operator not in ("$eq", "$ne", "$lt", "$lte", "$gt", "$gte"):
                     raise FilterError("unknown operator")
 
+                # equality of singular values can take advantage of the metadata index
+                # using containment operator. Containment can not be used to test equality
+                # of lists or dicts so we restrict to single values with a __len__ check.
+                if operator == "$eq" and not hasattr(clause, "__len__"):
+                    contains_value = cast({key: clause}, postgresql.JSONB)
+                    return json_col.op("@>")(contains_value)
+
                 matches_value = cast(clause, postgresql.JSONB)
 
+                # handles non-singular values
                 if operator == "$eq":
                     return json_col.op("->")(key) == matches_value
 
-                if operator == "$ne":
+                elif operator == "$ne":
                     return json_col.op("->")(key) != matches_value
 
-                if operator == "$lt":
+                elif operator == "$lt":
                     return json_col.op("->")(key) < matches_value
 
-                if operator == "$lte":
+                elif operator == "$lte":
                     return json_col.op("->")(key) <= matches_value
 
-                if operator == "$gt":
+                elif operator == "$gt":
                     return json_col.op("->")(key) > matches_value
 
-                if operator == "$gte":
+                elif operator == "$gte":
                     return json_col.op("->")(key) >= matches_value
-
                 else:
                     raise Unreachable()
 

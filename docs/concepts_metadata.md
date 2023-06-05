@@ -44,6 +44,13 @@ Logical operators compose other operators, and can be nested.
 | $or       |  Joins query clauses with a logical OR returns all documents that match the conditions of either clause. |
 
 
+### Performance
+
+For best performance, use scalar key-value pairs for metadata and prefer `$eq`, `$and` and `$or` filters where possible.
+Those variants are most consistently able to make use of indexes.
+
+
+
 ### Examples
 
 ---
