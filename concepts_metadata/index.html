@@ -418,6 +418,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    Performance
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     Examples
   </a>
@@ -616,6 +623,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    Performance
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     Examples
   </a>
@@ -716,6 +730,9 @@ In practice you should keep metadata fields as small as possible to maximize per
 </tr>
 </tbody>
 </table>
+<h3 id="performance">Performance</h3>
+<p>For best performance, use scalar key-value pairs for metadata and prefer <code>$eq</code>, <code>$and</code> and <code>$or</code> filters where possible.
+Those variants are most consistently able to make use of indexes.</p>
 <h3 id="examples">Examples</h3>
 <hr />
 <p><code>year</code> equals 2020</p>
