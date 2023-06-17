@@ -96,12 +96,33 @@ class Client:
             CollectionNotFound: If no collection with the given name exists.
         """
         from vecs.collection import Collection
+        query = text(
+        f"""
+        select
+            relname as table_name,
+            atttypmod as embedding_dim
+        from
+            pg_class pc
+            join pg_attribute pa
+                on pc.oid = pa.attrelid
+        where
+            pc.relnamespace = 'vecs'::regnamespace
+            and pc.relkind = 'r'
+            and pa.attname = 'vec'
+            and not pc.relname ^@ '_'
+            and pc.relname = '{name}'
+        """
+        )
+        collections = []
+        with self.Session() as sess:
+            for name, dimension in sess.execute(query):
+                existing_collection = Collection(name, dimension, self)
+                collections.append(existing_collection)
 
-        collections = Collection._list_collections(self)
-        for collection in collections:
-            if collection.name == name:
-                return collection
-        raise CollectionNotFound("No collection found with requested name")
+        if len(collections) == 0:
+            raise CollectionNotFound("No collection found with requested name")
+        
+        return collections[0]
 
     def list_collections(self) -> List["Collection"]:
         """
