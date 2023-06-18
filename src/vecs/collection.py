@@ -406,31 +406,11 @@ class Collection:
             Exists: Whether the collection exists or not
         """
 
-        query = text(
-        f"""
-        select
-            relname as table_name,
-            atttypmod as embedding_dim
-        from
-            pg_class pc
-            join pg_attribute pa
-                on pc.oid = pa.attrelid
-        where
-            pc.relnamespace = 'vecs'::regnamespace
-            and pc.relkind = 'r'
-            and pa.attname = 'vec'
-            and not pc.relname ^@ '_'
-            and pc.relname = '{name}'
-        """
-        )
-
-        xc = []
-        with client.Session() as sess:
-            for name, dimension in sess.execute(query):
-                existing_collection = cls(name, dimension, client)
-                xc.append(existing_collection)
-        return len(xc) != 0
-
+        try:
+            client.get_collection(name)
+            return True
+        except CollectionNotFound:
+            return False
 
 
     @property
