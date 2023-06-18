@@ -110,19 +110,17 @@ class Client:
             and pc.relkind = 'r'
             and pa.attname = 'vec'
             and not pc.relname ^@ '_'
-            and pc.relname = '{name}'
+            and pc.relname = :name
         """
-        )
-        collections = []
+        ).bindparams(name=name)
         with self.Session() as sess:
-            for name, dimension in sess.execute(query):
-                existing_collection = Collection(name, dimension, self)
-                collections.append(existing_collection)
+            query_result: Row[Tuple[str, int]] | None = sess.execute(query).fetchone()
 
-        if len(collections) == 0:
-            raise CollectionNotFound("No collection found with requested name")
-        
-        return collections[0]
+            if query_result is None:
+                raise CollectionNotFound("No collection found with requested name")
+            
+            name, dimension = query_result
+            return Collection(name, dimension, self)
 
     def list_collections(self) -> List["Collection"]:
         """
