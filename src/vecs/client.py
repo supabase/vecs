@@ -97,11 +97,31 @@ class Client:
         """
         from vecs.collection import Collection
 
-        collections = Collection._list_collections(self)
-        for collection in collections:
-            if collection.name == name:
-                return collection
-        raise CollectionNotFound("No collection found with requested name")
+        query = text(
+            f"""
+        select
+            relname as table_name,
+            atttypmod as embedding_dim
+        from
+            pg_class pc
+            join pg_attribute pa
+                on pc.oid = pa.attrelid
+        where
+            pc.relnamespace = 'vecs'::regnamespace
+            and pc.relkind = 'r'
+            and pa.attname = 'vec'
+            and not pc.relname ^@ '_'
+            and pc.relname = :name
+        """
+        ).bindparams(name=name)
+        with self.Session() as sess:
+            query_result = sess.execute(query).fetchone()
+
+            if query_result is None:
+                raise CollectionNotFound("No collection found with requested name")
+
+            name, dimension = query_result
+            return Collection(name, dimension, self)
 
     def list_collections(self) -> List["Collection"]:
         """

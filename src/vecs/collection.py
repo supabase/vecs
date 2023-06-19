@@ -161,9 +161,11 @@ class Collection:
         Returns:
             Collection: The newly created collection.
         """
-        existing_collections = self.__class__._list_collections(self.client)
-        existing_collection_names = [x.name for x in existing_collections]
-        if self.name in existing_collection_names:
+
+        collection_exists = self.__class__._does_collection_exist(
+            self.client, self.name
+        )
+        if collection_exists:
             raise CollectionAlreadyExists(
                 "Collection with requested name already exists"
             )
@@ -180,9 +182,11 @@ class Collection:
         Returns:
             Collection: The deleted collection.
         """
-        existing_collections = self.__class__._list_collections(self.client)
-        existing_collection_names = [x.name for x in existing_collections]
-        if self.name not in existing_collection_names:
+
+        collection_exists = self.__class__._does_collection_exist(
+            self.client, self.name
+        )
+        if not collection_exists:
             raise CollectionNotFound("Collection with requested name not found")
         self.table.drop(self.client.engine)
         return self
@@ -390,6 +394,27 @@ class Collection:
                 existing_collection = cls(name, dimension, client)
                 xc.append(existing_collection)
         return xc
+
+    @classmethod
+    def _does_collection_exist(cls, client: "Client", name: str) -> bool:
+        """
+        PRIVATE
+
+        Checks if a collection with a given name exists within the database
+
+        Args:
+            client (Client): The database client.
+            name (str): The name of the collection
+
+        Returns:
+            Exists: Whether the collection exists or not
+        """
+
+        try:
+            client.get_collection(name)
+            return True
+        except CollectionNotFound:
+            return False
 
     @property
     def index(self) -> Optional[str]:
