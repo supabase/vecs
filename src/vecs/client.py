@@ -96,8 +96,9 @@ class Client:
             CollectionNotFound: If no collection with the given name exists.
         """
         from vecs.collection import Collection
+
         query = text(
-        f"""
+            f"""
         select
             relname as table_name,
             atttypmod as embedding_dim
@@ -114,11 +115,11 @@ class Client:
         """
         ).bindparams(name=name)
         with self.Session() as sess:
-            query_result: Row[Tuple[str, int]] | None = sess.execute(query).fetchone()
+            query_result = sess.execute(query).fetchone()
 
             if query_result is None:
                 raise CollectionNotFound("No collection found with requested name")
-            
+
             name, dimension = query_result
             return Collection(name, dimension, self)
 

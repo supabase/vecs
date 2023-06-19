@@ -162,8 +162,10 @@ class Collection:
             Collection: The newly created collection.
         """
 
-        collection_exists = self.__class__._does_collection_exist(self.client, self.name)
-        if (collection_exists):
+        collection_exists = self.__class__._does_collection_exist(
+            self.client, self.name
+        )
+        if collection_exists:
             raise CollectionAlreadyExists(
                 "Collection with requested name already exists"
             )
@@ -181,8 +183,10 @@ class Collection:
             Collection: The deleted collection.
         """
 
-        collection_exists = self.__class__._does_collection_exist(self.client, self.name)
-        if (not collection_exists):
+        collection_exists = self.__class__._does_collection_exist(
+            self.client, self.name
+        )
+        if not collection_exists:
             raise CollectionNotFound("Collection with requested name not found")
         self.table.drop(self.client.engine)
         return self
@@ -411,7 +415,6 @@ class Collection:
             return True
         except CollectionNotFound:
             return False
-
 
     @property
     def index(self) -> Optional[str]:
