@@ -296,6 +296,7 @@ class Collection:
         measure: Union[IndexMeasure, str] = IndexMeasure.cosine_distance,
         include_value: bool = False,
         include_metadata: bool = False,
+        probes: int = 10,
     ) -> Union[List[Record], List[str]]:
         """
         Executes a similarity search in the collection.
@@ -353,7 +354,9 @@ class Collection:
         with self.client.Session() as sess:
             with sess.begin():
                 # index ignored if greater than n_lists
-                sess.execute(text("set local ivfflat.probes = 10"))
+                sess.execute(
+                    text("set local ivfflat.probes = :probes").bindparams(probes=probes)
+                )
                 if len(cols) == 1:
                     return [str(x) for x in sess.scalars(stmt).fetchall()]
                 return sess.execute(stmt).fetchall() or []
