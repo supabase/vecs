@@ -315,6 +315,9 @@ class Collection:
             Union[List[Record], List[str]]: The result of the similarity search.
         """
 
+        if probes < 1:
+            raise ArgError("probes must be > 10")
+
         if limit > 1000:
             raise ArgError("limit must be <= 1000")
 
