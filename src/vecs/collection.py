@@ -315,6 +315,9 @@ class Collection:
             Union[List[Record], List[str]]: The result of the similarity search.
         """
 
+        if not isinstance(probes, int):
+            raise ArgError("probes must be an integer")
+
         if probes < 1:
             raise ArgError("probes must be > 10")
 

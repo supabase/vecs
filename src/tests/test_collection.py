@@ -185,6 +185,12 @@ def test_query(client: vecs.Client) -> None:
         )
 
     with pytest.raises(vecs.exc.ArgError):
+        res = bar.query(
+            query_vector=query_vec,
+            probes="a",
+        )
+
+    with pytest.raises(vecs.exc.ArgError):
         res = bar.query(query_vector=query_vec, limit=top_k, measure="invalid")
 
     # include_value
