@@ -173,6 +173,24 @@ def test_query(client: vecs.Client) -> None:
         )
 
     with pytest.raises(vecs.exc.ArgError):
+        res = bar.query(
+            query_vector=query_vec,
+            probes=0,
+        )
+
+    with pytest.raises(vecs.exc.ArgError):
+        res = bar.query(
+            query_vector=query_vec,
+            probes=-1,
+        )
+
+    with pytest.raises(vecs.exc.ArgError):
+        res = bar.query(
+            query_vector=query_vec,
+            probes="a",
+        )
+
+    with pytest.raises(vecs.exc.ArgError):
         res = bar.query(query_vector=query_vec, limit=top_k, measure="invalid")
 
     # include_value
@@ -198,6 +216,15 @@ def test_query(client: vecs.Client) -> None:
     assert len(res[0]) == 2
     assert res[0][0] == "vec5"
     assert res[0][1] == query_meta
+
+    # test for different numbers of probes
+    assert len(bar.query(query_vector=query_vec, limit=top_k, probes=10)) == top_k
+
+    assert len(bar.query(query_vector=query_vec, limit=top_k, probes=5)) == top_k
+
+    assert len(bar.query(query_vector=query_vec, limit=top_k, probes=1)) == top_k
+
+    assert len(bar.query(query_vector=query_vec, limit=top_k, probes=999)) == top_k
 
 
 @pytest.mark.filterwarnings("ignore:Query does")

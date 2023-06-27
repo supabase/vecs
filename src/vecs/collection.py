@@ -296,6 +296,8 @@ class Collection:
         measure: Union[IndexMeasure, str] = IndexMeasure.cosine_distance,
         include_value: bool = False,
         include_metadata: bool = False,
+        *,
+        probes: Optional[int] = None,
     ) -> Union[List[Record], List[str]]:
         """
         Executes a similarity search in the collection.
@@ -309,10 +311,20 @@ class Collection:
             measure (Union[IndexMeasure, str], optional): The distance measure to use for the search. Defaults to 'cosine_distance'.
             include_value (bool, optional): Whether to include the distance value in the results. Defaults to False.
             include_metadata (bool, optional): Whether to include the metadata in the results. Defaults to False.
+            probes (Optional[Int], optional): Number of ivfflat index lists to query. Higher increases accuracy but decreases speed
 
         Returns:
             Union[List[Record], List[str]]: The result of the similarity search.
         """
+
+        if probes is None:
+            probes = 10
+
+        if not isinstance(probes, int):
+            raise ArgError("probes must be an integer")
+
+        if probes < 1:
+            raise ArgError("probes must be >= 1")
 
         if limit > 1000:
             raise ArgError("limit must be <= 1000")
@@ -353,7 +365,9 @@ class Collection:
         with self.client.Session() as sess:
             with sess.begin():
                 # index ignored if greater than n_lists
-                sess.execute(text("set local ivfflat.probes = 10"))
+                sess.execute(
+                    text("set local ivfflat.probes = :probes").bindparams(probes=probes)
+                )
                 if len(cols) == 1:
                     return [str(x) for x in sess.scalars(stmt).fetchall()]
                 return sess.execute(stmt).fetchall() or []
