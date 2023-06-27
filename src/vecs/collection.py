@@ -296,6 +296,7 @@ class Collection:
         measure: Union[IndexMeasure, str] = IndexMeasure.cosine_distance,
         include_value: bool = False,
         include_metadata: bool = False,
+        *,
         probes: Optional[int] = None,
     ) -> Union[List[Record], List[str]]:
         """
