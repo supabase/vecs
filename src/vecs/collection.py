@@ -310,7 +310,7 @@ class Collection:
             measure (Union[IndexMeasure, str], optional): The distance measure to use for the search. Defaults to 'cosine_distance'.
             include_value (bool, optional): Whether to include the distance value in the results. Defaults to False.
             include_metadata (bool, optional): Whether to include the metadata in the results. Defaults to False.
-            probes (int, optional): Number of ivfflat index lists to query. Higher increases accuracy but decreases speed
+            probes (Optional[Int], optional): Number of ivfflat index lists to query. Higher increases accuracy but decreases speed
 
         Returns:
             Union[List[Record], List[str]]: The result of the similarity search.
