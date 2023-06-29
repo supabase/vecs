@@ -7,12 +7,14 @@ All public classes, enums, and functions are re-exported by the top level `vecs`
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
+from deprecated import deprecated
 from sqlalchemy import MetaData, create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from vecs.exc import CollectionNotFound
+from vecs.experimental.adapter import Adapter
 
 if TYPE_CHECKING:
     from vecs.collection import Collection
@@ -64,6 +66,89 @@ class Client:
                 sess.execute(text("create schema if not exists vecs;"))
                 sess.execute(text("create extension if not exists vector;"))
 
+    def get_or_create_collection(
+        self,
+        name: str,
+        *,
+        dimension: Optional[int] = None,
+        adapter: Optional[Adapter] = None,
+    ) -> Collection:
+        """
+        Get a vector collection by name, or create it if no collection with
+        *name* exists.
+
+        Args:
+            name (str): The name of the collection.
+
+        Keyword Args:
+            dimension (int): The dimensionality of the vectors in the collection.
+            pipeline (int): The dimensionality of the vectors in the collection.
+
+        Returns:
+            Collection: The created collection.
+
+        Raises:
+            CollectionAlreadyExists: If a collection with the same name already exists
+        """
+        from vecs.collection import Collection
+
+        query = text(
+            f"""
+        select
+            relname as table_name,
+            atttypmod as embedding_dim
+        from
+            pg_class pc
+            join pg_attribute pa
+                on pc.oid = pa.attrelid
+        where
+            pc.relnamespace = 'vecs'::regnamespace
+            and pc.relkind = 'r'
+            and pa.attname = 'vec'
+            and not pc.relname ^@ '_'
+            and pc.relname = :name
+        """
+        ).bindparams(name=name)
+        with self.Session() as sess:
+            query_result = sess.execute(query).fetchone()
+
+            if query_result:
+                _, collection_dimension = query_result
+            else:
+                collection_dimension = None
+
+        reported_dimensions = set(
+            [
+                x
+                for x in [
+                    dimension,
+                    collection_dimension,
+                    adapter.exported_dimension if adapter else None,
+                ]
+                if x is not None
+            ]
+        )
+        if len(reported_dimensions) == 0:
+            raise Exception("One of dimension or adapter must provide a dimension")
+        elif len(reported_dimensions) > 1:
+            raise Exception(
+                "Dimensions reported by adapter, dimension, and collection do not match"
+            )
+
+        # The agreed upon dimension
+        resolved_dimension: int = next(iter(reported_dimensions))
+
+        collection = Collection(
+            name=name, dimension=resolved_dimension, client=self, adapter=adapter
+        )
+
+        # if the collection already exists, return
+        if collection_dimension:
+            return collection
+        # otherwise, create it
+        return collection._create()
+
+    @deprecated("use Client.get_or_create_collection")
     def create_collection(self, name: str, dimension: int) -> Collection:
         """
         Create a new vector collection.
@@ -82,6 +167,7 @@ class Client:
 
         return Collection(name, dimension, self)._create()
 
+    @deprecated("use Client.get_or_create_collection")
     def get_collection(self, name: str) -> Collection:
         """
         Retrieve an existing vector collection.
@@ -121,7 +207,11 @@ class Client:
                 raise CollectionNotFound("No collection found with requested name")
 
             name, dimension = query_result
-            return Collection(name, dimension, self)
+            return Collection(
+                name,
+                dimension,
+                self,
+            )
 
     def list_collections(self) -> List["Collection"]:
         """

@@ -10,7 +10,7 @@ import math
 import uuid
 import warnings
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from flupy import flu
 from pgvector.sqlalchemy import Vector
@@ -36,6 +36,8 @@ from vecs.exc import (
     FilterError,
     Unreachable,
 )
+from vecs.experimental.adapter import Adapter, AdapterContext
+from vecs.experimental.adapter.noop import NoOp
 
 if TYPE_CHECKING:
     from vecs.client import Client
@@ -112,7 +114,13 @@ class Collection:
     Note: Some methods of this class can raise exceptions from the `vecs.exc` module if errors occur.
     """
 
-    def __init__(self, name: str, dimension: int, client: Client):
+    def __init__(
+        self,
+        name: str,
+        dimension: int,
+        client: Client,
+        adapter: Optional[Adapter] = None,
+    ):
         """
         Initializes a new instance of the `Collection` class.
 
@@ -129,6 +137,7 @@ class Collection:
         self.dimension = dimension
         self.table = build_table(name, client.meta, dimension)
         self._index: Optional[str] = None
+        self.adapter = adapter or Adapter(steps=[NoOp(dimension=dimension)])
 
     def __repr__(self):
         """
@@ -191,23 +200,30 @@ class Collection:
         self.table.drop(self.client.engine)
         return self
 
-    def upsert(
-        self, vectors: Iterable[Tuple[str, Iterable[Numeric], Metadata]]
-    ) -> None:
+    def upsert(self, vectors: Iterable[Tuple[str, Any, Metadata]]) -> None:
         """
         Inserts or updates *vectors* records in the collection.
 
         Args:
-            vectors (Iterable[Tuple[str, Iterable[Numeric], Metadata]]): An iterable of vectors to upsert.
+            vectors (Iterable[Tuple[str, Any, Metadata]]): An iterable of vectors to upsert.
                 Each vector is represented as a tuple where the first element is a unique string identifier,
                 the second element is an iterable of numeric values, and the third element is metadata associated with the vector.
         """
 
         chunk_size = 500
 
+        # Construct a lazy pipeline of steps to transform and chunk
+        # user input
+        pipeline = (
+            flu(vectors)
+            .map(lambda y: self.adapter(*y, AdapterContext("upsert")))
+            .flatten()
+            .chunk(chunk_size)
+        )
+
         with self.client.Session() as sess:
             with sess.begin():
-                for chunk in flu(vectors).chunk(chunk_size):
+                for chunk in pipeline:
                     stmt = postgresql.insert(self.table).values(chunk)
                     stmt = stmt.on_conflict_do_update(
                         index_elements=[self.table.c.id],
@@ -305,7 +321,7 @@ class Collection:
         The return type is dependent on arguments *include_value* and *include_metadata*
 
         Args:
-            query_vector (Iterable[Numeric]): The vector to use as the query.
+            query_vector (Any): The vector to use as the query.
             limit (int, optional): The maximum number of results to return. Defaults to 10.
             filters (Optional[Dict], optional): Filters to apply to the search. Defaults to None.
             measure (Union[IndexMeasure, str], optional): The distance measure to use for the search. Defaults to 'cosine_distance'.
@@ -340,12 +356,28 @@ class Collection:
                 f"Query does not have a covering index for {imeasure}. See Collection.create_index"
             )
 
+        # Adapt the query using the pipeline
+        adapted_query = [
+            x
+            for x in self.adapter(
+                id="",
+                media=query_vector,
+                metadata={},
+                adapter_context=AdapterContext("query"),
+            )
+        ]
+
+        if len(adapted_query) != 1:
+            raise Exception("Failed to produce query vector from input")
+
+        _, vec, _ = next(iter(adapted_query))
+
         distance_lambda = INDEX_MEASURE_TO_SQLA_ACC.get(imeasure)
         if distance_lambda is None:
             # unreachable
             raise ArgError("invalid distance_measure")  # pragma: no cover
 
-        distance_clause = distance_lambda(self.table.c.vec)(query_vector)
+        distance_clause = distance_lambda(self.table.c.vec)(vec)
 
         cols = [self.table.c.id]
 

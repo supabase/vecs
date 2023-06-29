@@ -42,6 +42,7 @@ REQUIRES = [
     "sqlalchemy==2.*",
     "psycopg2-binary==2.9.*",
     "flupy==1.*",
+    "deprecated==1.2.*",
 ]
 
 
