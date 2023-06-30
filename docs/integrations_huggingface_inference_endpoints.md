@@ -83,7 +83,7 @@ DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
 vx = vecs.Client(DB_CONNECTION)
 
 # create a collection named 'sentences' with 384 dimensional vectors (default dimension for paraphrase-MiniLM-L6-v2)
-sentences = vx.create_collection(name="sentences", dimension=384)
+sentences = vx.get_or_create_collection(name="sentences", dimension=384)
 
 # upsert the embeddings into the 'sentences' collection
 sentences.upsert(vectors=records)

@@ -30,23 +30,12 @@ DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
 vx = vecs.create_client(DB_CONNECTION)
 ```
 
-## Create collection
+## Get or Create a Collection
 
-You can create a collection to store vectors specifying the collections name and the number of dimensions in the vectors you intend to store.
-
-```python
-docs = vx.create_collection(name="docs", dimension=3)
-```
-
-!!! note
-    If another collection exists with the same name, use [get_collection](#get-an-existing-collection) to retrieve it.
-
-## Get an existing collection
-
-To access a previously created collection, use `get_collection` to retrieve it by name
+You can get, or create a collection if it doesn't exist, specifying the collections name and the number of dimensions in the vectors you intend to store.
 
 ```python
-docs = vx.get_collection(name="docs")
+docs = vx.get_or_create_collection(name="docs", dimension=3)
 ```
 
 ## Upserting vectors
@@ -187,3 +176,32 @@ with vecs.create_client(DB_CONNECTION) as vx:
 
 # connections are now closed
 ```
+
+
+---------
+## Deprecated
+
+### Create collection
+
+!!! note
+    Deprecated: use [get_or_create_collection](#get-or-create-a-collection)
+
+You can create a collection to store vectors specifying the collections name and the number of dimensions in the vectors you intend to store.
+
+```python
+docs = vx.get_or_create_collection(name="docs", dimension=3)
+```
+
+
+### Get an existing collection
+
+!!! note
+    Deprecated: use [get_or_create_collection](#get-or-create-a-collection)
+
+To access a previously created collection, use `get_collection` to retrieve it by name
+
+```python
+docs = vx.get_collection(name="docs")
+```
+
+

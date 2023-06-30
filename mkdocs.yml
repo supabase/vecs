@@ -19,6 +19,7 @@ nav:
     - Hosting: hosting.md
   - Concepts:
     - Collections: concepts_collections.md
+    - Adapters: concepts_adapters.md
     - Indexes: concepts_indexes.md
     - Metadata: concepts_metadata.md
   - Integrations:

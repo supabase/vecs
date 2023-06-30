@@ -56,7 +56,7 @@ DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
 vx = vecs.Client(DB_CONNECTION)
 
 # create a collection named 'sentences' with 512 dimensional vectors (default dimension for text-embedding-ada-002)
-sentences = vx.create_collection(name="sentences", dimension=1536)
+sentences = vx.get_or_create_collection(name="sentences", dimension=1536)
 
 # upsert the embeddings into the 'sentences' collection
 sentences.upsert(vectors=embeddings)
