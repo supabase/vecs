@@ -139,6 +139,23 @@ class Collection:
         self._index: Optional[str] = None
         self.adapter = adapter or Adapter(steps=[NoOp(dimension=dimension)])
 
+        reported_dimensions = set(
+            [
+                x
+                for x in [
+                    dimension,
+                    adapter.exported_dimension if adapter else None,
+                ]
+                if x is not None
+            ]
+        )
+        if len(reported_dimensions) == 0:
+            raise Exception("One of dimension or adapter must provide a dimension")
+        elif len(reported_dimensions) > 1:
+            raise Exception(
+                "Dimensions reported by adapter, dimension, and collection do not match"
+            )
+
     def __repr__(self):
         """
         Returns a string representation of the `Collection` instance.
@@ -159,6 +176,53 @@ class Collection:
             with sess.begin():
                 stmt = select(func.count()).select_from(self.table)
                 return sess.execute(stmt).scalar() or 0
+
+    def _create_if_not_exists(self):
+        """
+        PRIVATE
+
+        Creates a new collection in the database if it doesn't already exist
+
+        Returns:
+            Collection: The found or created collection.
+        """
+        query = text(
+            f"""
+        select
+            relname as table_name,
+            atttypmod as embedding_dim
+        from
+            pg_class pc
+            join pg_attribute pa
+                on pc.oid = pa.attrelid
+        where
+            pc.relnamespace = 'vecs'::regnamespace
+            and pc.relkind = 'r'
+            and pa.attname = 'vec'
+            and not pc.relname ^@ '_'
+            and pc.relname = :name
+        """
+        ).bindparams(name=self.name)
+        with self.client.Session() as sess:
+            query_result = sess.execute(query).fetchone()
+
+            if query_result:
+                _, collection_dimension = query_result
+            else:
+                collection_dimension = None
+
+        reported_dimensions = set(
+            [x for x in [self.dimension, collection_dimension] if x is not None]
+        )
+        if len(reported_dimensions) > 1:
+            raise Exception(
+                "Dimensions reported by adapter, dimension, and existing collection do not match"
+            )
+
+        if not collection_dimension:
+            self.table.create(self.client.engine)
+
+        return self
 
     def _create(self):
         """
@@ -191,13 +255,12 @@ class Collection:
         Returns:
             Collection: The deleted collection.
         """
+        from sqlalchemy.schema import DropTable
 
-        collection_exists = self.__class__._does_collection_exist(
-            self.client, self.name
-        )
-        if not collection_exists:
-            raise CollectionNotFound("Collection with requested name not found")
-        self.table.drop(self.client.engine)
+        with self.client.Session() as sess:
+            sess.execute(DropTable(self.table, if_exists=True))
+            sess.commit()
+
         return self
 
     def upsert(self, vectors: Iterable[Tuple[str, Any, Metadata]]) -> None:

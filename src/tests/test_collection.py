@@ -10,7 +10,7 @@ def test_upsert(client: vecs.Client) -> None:
     n_records = 100
     dim = 384
 
-    movies = client.create_collection(name="ping", dimension=dim)
+    movies = client.get_or_create_collection(name="ping", dimension=dim)
 
     # collection initially empty
     assert len(movies) == 0
@@ -44,7 +44,7 @@ def test_fetch(client: vecs.Client) -> None:
     n_records = 100
     dim = 384
 
-    movies = client.create_collection(name="ping", dimension=dim)
+    movies = client.get_or_create_collection(name="ping", dimension=dim)
 
     records = [
         (
@@ -82,7 +82,7 @@ def test_delete(client: vecs.Client) -> None:
     n_records = 100
     dim = 384
 
-    movies = client.create_collection(name="ping", dimension=dim)
+    movies = client.get_or_create_collection(name="ping", dimension=dim)
 
     records = [
         (
@@ -109,12 +109,12 @@ def test_delete(client: vecs.Client) -> None:
 
 
 def test_repr(client: vecs.Client) -> None:
-    movies = client.create_collection(name="movies", dimension=99)
+    movies = client.get_or_create_collection(name="movies", dimension=99)
     assert repr(movies) == 'vecs.Collection(name="movies", dimension=99)'
 
 
 def test_getitem(client: vecs.Client) -> None:
-    movies = client.create_collection(name="movies", dimension=3)
+    movies = client.get_or_create_collection(name="movies", dimension=3)
     movies.upsert(vectors=[("1", [1, 2, 3], {})])
 
     assert movies["1"] is not None
@@ -132,7 +132,7 @@ def test_query(client: vecs.Client) -> None:
     n_records = 100
     dim = 64
 
-    bar = client.create_collection(name="bar", dimension=dim)
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
 
     records = [
         (
@@ -232,7 +232,7 @@ def test_query_filters(client: vecs.Client) -> None:
     n_records = 100
     dim = 4
 
-    bar = client.create_collection(name="bar", dimension=dim)
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
 
     records = [
         (f"0", [0, 0, 0, 0], {"year": 1990}),
@@ -411,7 +411,7 @@ def test_query_filters(client: vecs.Client) -> None:
 
 
 def test_filters_eq(client: vecs.Client) -> None:
-    bar = client.create_collection(name="bar", dimension=4)
+    bar = client.get_or_create_collection(name="bar", dimension=4)
 
     records = [
         ("0", [0, 0, 0, 0], {"a": 1}),
@@ -510,13 +510,13 @@ def test_filters_eq(client: vecs.Client) -> None:
 
 def test_access_index(client: vecs.Client) -> None:
     dim = 4
-    bar = client.create_collection(name="bar", dimension=dim)
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
     assert bar.index is None
 
 
 def test_create_index(client: vecs.Client) -> None:
     dim = 4
-    bar = client.create_collection(name="bar", dimension=dim)
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
 
     bar.create_index()
 
@@ -540,7 +540,7 @@ def test_create_index(client: vecs.Client) -> None:
 
 def test_cosine_index_query(client: vecs.Client) -> None:
     dim = 4
-    bar = client.create_collection(name="bar", dimension=dim)
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
     bar.upsert([("a", [1, 2, 3, 4], {})])
     bar.create_index(measure=vecs.IndexMeasure.cosine_distance)
     results = bar.query(
@@ -553,7 +553,7 @@ def test_cosine_index_query(client: vecs.Client) -> None:
 
 def test_l2_index_query(client: vecs.Client) -> None:
     dim = 4
-    bar = client.create_collection(name="bar", dimension=dim)
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
     bar.upsert([("a", [1, 2, 3, 4], {})])
     bar.create_index(measure=vecs.IndexMeasure.l2_distance)
     results = bar.query(
@@ -566,7 +566,7 @@ def test_l2_index_query(client: vecs.Client) -> None:
 
 def test_max_inner_product_index_query(client: vecs.Client) -> None:
     dim = 4
-    bar = client.create_collection(name="bar", dimension=dim)
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
     bar.upsert([("a", [1, 2, 3, 4], {})])
     bar.create_index(measure=vecs.IndexMeasure.max_inner_product)
     results = bar.query(
@@ -579,7 +579,7 @@ def test_max_inner_product_index_query(client: vecs.Client) -> None:
 
 def test_mismatch_measure(client: vecs.Client) -> None:
     dim = 4
-    bar = client.create_collection(name="bar", dimension=dim)
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
     bar.upsert([("a", [1, 2, 3, 4], {})])
     bar.create_index(measure=vecs.IndexMeasure.max_inner_product)
     with pytest.warns():
@@ -593,7 +593,7 @@ def test_mismatch_measure(client: vecs.Client) -> None:
 
 
 def test_is_indexed_for_measure(client: vecs.Client) -> None:
-    bar = client.create_collection(name="bar", dimension=4)
+    bar = client.get_or_create_collection(name="bar", dimension=4)
 
     bar.create_index(measure=vecs.IndexMeasure.max_inner_product)
     assert not bar.is_indexed_for_measure("invalid")  # type: ignore

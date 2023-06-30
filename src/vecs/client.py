@@ -92,61 +92,27 @@ class Client:
         """
         from vecs.collection import Collection
 
-        query = text(
-            f"""
-        select
-            relname as table_name,
-            atttypmod as embedding_dim
-        from
-            pg_class pc
-            join pg_attribute pa
-                on pc.oid = pa.attrelid
-        where
-            pc.relnamespace = 'vecs'::regnamespace
-            and pc.relkind = 'r'
-            and pa.attname = 'vec'
-            and not pc.relname ^@ '_'
-            and pc.relname = :name
-        """
-        ).bindparams(name=name)
-        with self.Session() as sess:
-            query_result = sess.execute(query).fetchone()
-
-            if query_result:
-                _, collection_dimension = query_result
-            else:
-                collection_dimension = None
-
         reported_dimensions = set(
             [
                 x
-                for x in [
-                    dimension,
-                    collection_dimension,
-                    adapter.exported_dimension if adapter else None,
-                ]
+                for x in [dimension, (adapter.exported_dimension if adapter else None)]
                 if x is not None
             ]
         )
         if len(reported_dimensions) == 0:
             raise Exception("One of dimension or adapter must provide a dimension")
-        elif len(reported_dimensions) > 1:
+        if len(reported_dimensions) > 1:
             raise Exception(
-                "Dimensions reported by adapter, dimension, and collection do not match"
+                "Dimensions reported by adapter, dimension, and existing collection do not match"
             )
 
-        # The agreed upon dimension
         resolved_dimension: int = next(iter(reported_dimensions))
 
         collection = Collection(
             name=name, dimension=resolved_dimension, client=self, adapter=adapter
         )
 
-        # if the collection already exists, return
-        if collection_dimension:
-            return collection
-        # otherwise, create it
-        return collection._create()
+        return collection._create_if_not_exists()
 
     @deprecated("use Client.get_or_create_collection")
     def create_collection(self, name: str, dimension: int) -> Collection:
@@ -228,14 +194,13 @@ class Client:
         """
         Delete a vector collection.
 
+        If no collection with requested name exists, does nothing.
+
         Args:
             name (str): The name of the collection.
 
         Returns:
             None
-
-        Raises:
-            CollectionNotFound: If no collection with the given name exists.
         """
         from vecs.collection import Collection
 
