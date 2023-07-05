@@ -45,7 +45,7 @@ docs = vx.get_or_create_collection(name="docs", dimension=3)
 ```python
 # add records to the collection
 docs.upsert(
-    vectors=[
+    records=[
         (
          "vec0",           # the vector's identifier
          [0.1, 0.2, 0.3],  # the vector. list or np.array
@@ -123,7 +123,7 @@ The simplest form of search is to provide a query vector.
 
 ```python
 docs.query(
-    query_vector=[0.4,0.5,0.6],  # required
+    data=[0.4,0.5,0.6],          # required
     limit=5,                     # number of records to return
     filters={},                  # metadata filters
     measure="cosine_distance",   # distance measure to use
@@ -145,7 +145,7 @@ In context:
 
 ```python
 docs.query(
-    query_vector=[0.4,0.5,0.6],
+    data=[0.4,0.5,0.6],
     filters={"year": {"$eq": 2012}}, # metadata filters
 )
 ```

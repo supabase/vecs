@@ -263,7 +263,9 @@ class Collection:
 
         return self
 
-    def upsert(self, vectors: Iterable[Tuple[str, Any, Metadata]]) -> None:
+    def upsert(
+        self, records: Iterable[Tuple[str, Any, Metadata]], skip_adapter: bool = False
+    ) -> None:
         """
         Inserts or updates *vectors* records in the collection.
 
@@ -271,18 +273,23 @@ class Collection:
             vectors (Iterable[Tuple[str, Any, Metadata]]): An iterable of vectors to upsert.
                 Each vector is represented as a tuple where the first element is a unique string identifier,
                 the second element is an iterable of numeric values, and the third element is metadata associated with the vector.
+
+            skip_adapter (bool): Should the adapter be skipped while upserting. i.e. if vectors are being
+                provided, rather than a media type that needs to be transformed
         """
 
         chunk_size = 500
 
-        # Construct a lazy pipeline of steps to transform and chunk
-        # user input
-        pipeline = (
-            flu(vectors)
-            .map(lambda y: self.adapter(*y, AdapterContext("upsert")))
-            .flatten()
-            .chunk(chunk_size)
-        )
+        if skip_adapter:
+            pipeline = flu(records).chunk(chunk_size)
+        else:
+            # Construct a lazy pipeline of steps to transform and chunk user input
+            pipeline = (
+                flu(records)
+                .map(lambda y: self.adapter(*y, AdapterContext("upsert")))
+                .flatten()
+                .chunk(chunk_size)
+            )
 
         with self.client.Session() as sess:
             with sess.begin():
@@ -369,7 +376,7 @@ class Collection:
 
     def query(
         self,
-        query_vector: Iterable[Numeric],
+        data: Union[Iterable[Numeric], Any],
         limit: int = 10,
         filters: Optional[Dict] = None,
         measure: Union[IndexMeasure, str] = IndexMeasure.cosine_distance,
@@ -377,6 +384,7 @@ class Collection:
         include_metadata: bool = False,
         *,
         probes: Optional[int] = None,
+        skip_adapter: bool = False,
     ) -> Union[List[Record], List[str]]:
         """
         Executes a similarity search in the collection.
@@ -419,16 +427,19 @@ class Collection:
                 f"Query does not have a covering index for {imeasure}. See Collection.create_index"
             )
 
-        # Adapt the query using the pipeline
-        adapted_query = [
-            x
-            for x in self.adapter(
-                id="",
-                media=query_vector,
-                metadata={},
-                adapter_context=AdapterContext("query"),
-            )
-        ]
+        if skip_adapter:
+            adapted_query = [data]
+        else:
+            # Adapt the query using the pipeline
+            adapted_query = [
+                x
+                for x in self.adapter(
+                    id="",
+                    media=data,
+                    metadata={},
+                    adapter_context=AdapterContext("query"),
+                )
+            ]
 
         if len(adapted_query) != 1:
             raise Exception("Failed to produce query vector from input")

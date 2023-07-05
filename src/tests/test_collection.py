@@ -115,7 +115,7 @@ def test_repr(client: vecs.Client) -> None:
 
 def test_getitem(client: vecs.Client) -> None:
     movies = client.get_or_create_collection(name="movies", dimension=3)
-    movies.upsert(vectors=[("1", [1, 2, 3], {})])
+    movies.upsert(records=[("1", [1, 2, 3], {})])
 
     assert movies["1"] is not None
     assert len(movies["1"]) == 3
@@ -153,7 +153,7 @@ def test_query(client: vecs.Client) -> None:
     top_k = 7
 
     res = bar.query(
-        query_vector=query_vec,
+        data=query_vec,
         limit=top_k,
         filters=None,
         measure="cosine_distance",
@@ -168,34 +168,34 @@ def test_query(client: vecs.Client) -> None:
 
     with pytest.raises(vecs.exc.ArgError):
         res = bar.query(
-            query_vector=query_vec,
+            data=query_vec,
             limit=1001,
         )
 
     with pytest.raises(vecs.exc.ArgError):
         res = bar.query(
-            query_vector=query_vec,
+            data=query_vec,
             probes=0,
         )
 
     with pytest.raises(vecs.exc.ArgError):
         res = bar.query(
-            query_vector=query_vec,
+            data=query_vec,
             probes=-1,
         )
 
     with pytest.raises(vecs.exc.ArgError):
         res = bar.query(
-            query_vector=query_vec,
-            probes="a",
+            data=query_vec,
+            probes="a",  # type: ignore
         )
 
     with pytest.raises(vecs.exc.ArgError):
-        res = bar.query(query_vector=query_vec, limit=top_k, measure="invalid")
+        res = bar.query(data=query_vec, limit=top_k, measure="invalid")
 
     # include_value
     res = bar.query(
-        query_vector=query_vec,
+        data=query_vec,
         limit=top_k,
         filters=None,
         measure="cosine_distance",
@@ -207,7 +207,7 @@ def test_query(client: vecs.Client) -> None:
 
     # include_metadata
     res = bar.query(
-        query_vector=query_vec,
+        data=query_vec,
         limit=top_k,
         filters=None,
         measure="cosine_distance",
@@ -218,13 +218,13 @@ def test_query(client: vecs.Client) -> None:
     assert res[0][1] == query_meta
 
     # test for different numbers of probes
-    assert len(bar.query(query_vector=query_vec, limit=top_k, probes=10)) == top_k
+    assert len(bar.query(data=query_vec, limit=top_k, probes=10)) == top_k
 
-    assert len(bar.query(query_vector=query_vec, limit=top_k, probes=5)) == top_k
+    assert len(bar.query(data=query_vec, limit=top_k, probes=5)) == top_k
 
-    assert len(bar.query(query_vector=query_vec, limit=top_k, probes=1)) == top_k
+    assert len(bar.query(data=query_vec, limit=top_k, probes=1)) == top_k
 
-    assert len(bar.query(query_vector=query_vec, limit=top_k, probes=999)) == top_k
+    assert len(bar.query(data=query_vec, limit=top_k, probes=999)) == top_k
 
 
 @pytest.mark.filterwarnings("ignore:Query does")
@@ -252,7 +252,7 @@ def test_query_filters(client: vecs.Client) -> None:
     query_rec = records[0]
 
     res = bar.query(
-        query_vector=query_rec[1],
+        data=query_rec[1],
         limit=3,
         filters={"year": {"$lt": 1990}},
         measure="cosine_distance",
@@ -264,7 +264,7 @@ def test_query_filters(client: vecs.Client) -> None:
 
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
-            query_vector=query_rec[1],
+            data=query_rec[1],
             limit=3,
             filters=["wrong type"],
             measure="cosine_distance",
@@ -272,7 +272,7 @@ def test_query_filters(client: vecs.Client) -> None:
 
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
-            query_vector=query_rec[1],
+            data=query_rec[1],
             limit=3,
             # multiple keys
             filters={"key1": {"$eq": "v"}, "key2": {"$eq": "v"}},
@@ -281,7 +281,7 @@ def test_query_filters(client: vecs.Client) -> None:
 
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
-            query_vector=query_rec[1],
+            data=query_rec[1],
             limit=3,
             # bad key
             filters={1: {"$eq": "v"}},
@@ -290,7 +290,7 @@ def test_query_filters(client: vecs.Client) -> None:
 
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
-            query_vector=query_rec[1],
+            data=query_rec[1],
             limit=3,
             # and requires a list
             filters={"$and": {"year": {"$eq": 1997}}},
@@ -301,7 +301,7 @@ def test_query_filters(client: vecs.Client) -> None:
     assert (
         len(
             bar.query(
-                query_vector=query_rec[1],
+                data=query_rec[1],
                 limit=3,
                 # and requires a list
                 filters={
@@ -320,7 +320,7 @@ def test_query_filters(client: vecs.Client) -> None:
     assert (
         len(
             bar.query(
-                query_vector=query_rec[1],
+                data=query_rec[1],
                 limit=3,
                 # and requires a list
                 filters={
@@ -337,7 +337,7 @@ def test_query_filters(client: vecs.Client) -> None:
 
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
-            query_vector=query_rec[1],
+            data=query_rec[1],
             limit=3,
             # bad value, too many conditions
             filters={"year": {"$eq": 1997, "$ne": 1998}},
@@ -346,7 +346,7 @@ def test_query_filters(client: vecs.Client) -> None:
 
     with pytest.raises(vecs.exc.FilterError):
         bar.query(
-            query_vector=query_rec[1],
+            data=query_rec[1],
             limit=3,
             # bad value, unknown operator
             filters={"year": {"$no_op": 1997}},
@@ -357,7 +357,7 @@ def test_query_filters(client: vecs.Client) -> None:
     assert (
         len(
             bar.query(
-                query_vector=query_rec[1],
+                data=query_rec[1],
                 limit=3,
                 # and requires a list
                 filters={"year": {"$ne": 2000}},
@@ -371,7 +371,7 @@ def test_query_filters(client: vecs.Client) -> None:
     assert (
         len(
             bar.query(
-                query_vector=query_rec[1],
+                data=query_rec[1],
                 limit=3,
                 # and requires a list
                 filters={"year": {"$lte": 1989}},
@@ -385,7 +385,7 @@ def test_query_filters(client: vecs.Client) -> None:
     assert (
         len(
             bar.query(
-                query_vector=query_rec[1],
+                data=query_rec[1],
                 limit=3,
                 # and requires a list
                 filters={"year": {"$gt": 2019}},
@@ -399,7 +399,7 @@ def test_query_filters(client: vecs.Client) -> None:
     assert (
         len(
             bar.query(
-                query_vector=query_rec[1],
+                data=query_rec[1],
                 limit=3,
                 # and requires a list
                 filters={"year": {"$gte": 2019}},
@@ -428,7 +428,7 @@ def test_filters_eq(client: vecs.Client) -> None:
 
     # Simple equality of number: has match
     assert bar.query(
-        query_vector=[0, 0, 0, 0],
+        data=[0, 0, 0, 0],
         limit=3,
         filters={"a": {"$eq": 1}},
     ) == ["0"]
@@ -436,7 +436,7 @@ def test_filters_eq(client: vecs.Client) -> None:
     # Simple equality of number: no match
     assert (
         bar.query(
-            query_vector=[0, 0, 0, 0],
+            data=[0, 0, 0, 0],
             limit=3,
             filters={"a": {"$eq": 5}},
         )
@@ -446,7 +446,7 @@ def test_filters_eq(client: vecs.Client) -> None:
     # Equality of array to value: no match
     assert (
         bar.query(
-            query_vector=[0, 0, 0, 0],
+            data=[0, 0, 0, 0],
             limit=3,
             filters={"a": {"$eq": [1]}},
         )
@@ -456,7 +456,7 @@ def test_filters_eq(client: vecs.Client) -> None:
     # Equality of value to array: no match
     assert (
         bar.query(
-            query_vector=[0, 0, 0, 0],
+            data=[0, 0, 0, 0],
             limit=3,
             filters={"b": {"$eq": 2}},
         )
@@ -466,7 +466,7 @@ def test_filters_eq(client: vecs.Client) -> None:
     # Equality of sub-array to array: no match
     assert (
         bar.query(
-            query_vector=[0, 0, 0, 0],
+            data=[0, 0, 0, 0],
             limit=3,
             filters={"b": {"$eq": [1]}},
         )
@@ -475,7 +475,7 @@ def test_filters_eq(client: vecs.Client) -> None:
 
     # Equality of array to array: match
     assert bar.query(
-        query_vector=[0, 0, 0, 0],
+        data=[0, 0, 0, 0],
         limit=3,
         filters={"b": {"$eq": [1, 2]}},
     ) == ["3"]
@@ -483,7 +483,7 @@ def test_filters_eq(client: vecs.Client) -> None:
     # Equality of scalar to dict (key matches): no match
     assert (
         bar.query(
-            query_vector=[0, 0, 0, 0],
+            data=[0, 0, 0, 0],
             limit=3,
             filters={"c": {"$eq": "d"}},
         )
@@ -493,7 +493,7 @@ def test_filters_eq(client: vecs.Client) -> None:
     # Equality of scalar to dict (value matches): no match
     assert (
         bar.query(
-            query_vector=[0, 0, 0, 0],
+            data=[0, 0, 0, 0],
             limit=3,
             filters={"c": {"$eq": "hi"}},
         )
@@ -502,7 +502,7 @@ def test_filters_eq(client: vecs.Client) -> None:
 
     # Equality of dict to dict: match
     assert bar.query(
-        query_vector=[0, 0, 0, 0],
+        data=[0, 0, 0, 0],
         limit=3,
         filters={"c": {"$eq": {"d": "hi"}}},
     ) == ["6"]
@@ -532,7 +532,7 @@ def test_create_index(client: vecs.Client) -> None:
         bar.create_index(measure="does not exist")
 
     bar.query(
-        query_vector=[1, 2, 3, 4],
+        data=[1, 2, 3, 4],
         limit=1,
         measure="cosine_distance",
     )
@@ -544,7 +544,7 @@ def test_cosine_index_query(client: vecs.Client) -> None:
     bar.upsert([("a", [1, 2, 3, 4], {})])
     bar.create_index(measure=vecs.IndexMeasure.cosine_distance)
     results = bar.query(
-        query_vector=[1, 2, 3, 4],
+        data=[1, 2, 3, 4],
         limit=1,
         measure="cosine_distance",
     )
@@ -557,7 +557,7 @@ def test_l2_index_query(client: vecs.Client) -> None:
     bar.upsert([("a", [1, 2, 3, 4], {})])
     bar.create_index(measure=vecs.IndexMeasure.l2_distance)
     results = bar.query(
-        query_vector=[1, 2, 3, 4],
+        data=[1, 2, 3, 4],
         limit=1,
         measure="l2_distance",
     )
@@ -570,7 +570,7 @@ def test_max_inner_product_index_query(client: vecs.Client) -> None:
     bar.upsert([("a", [1, 2, 3, 4], {})])
     bar.create_index(measure=vecs.IndexMeasure.max_inner_product)
     results = bar.query(
-        query_vector=[1, 2, 3, 4],
+        data=[1, 2, 3, 4],
         limit=1,
         measure="max_inner_product",
     )
@@ -584,7 +584,7 @@ def test_mismatch_measure(client: vecs.Client) -> None:
     bar.create_index(measure=vecs.IndexMeasure.max_inner_product)
     with pytest.warns():
         results = bar.query(
-            query_vector=[1, 2, 3, 4],
+            data=[1, 2, 3, 4],
             limit=1,
             # wrong measure
             measure="cosine_distance",
