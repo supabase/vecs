@@ -9,7 +9,7 @@ import sys
 import setuptools
 
 PACKAGE_NAME = "vecs"
-MINIMUM_PYTHON_VERSION = (3, 7, 0, "", 0)
+MINIMUM_PYTHON_VERSION = (3, 8, 0, "", 0)
 
 
 def check_python_version():
@@ -63,7 +63,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
