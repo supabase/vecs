@@ -33,7 +33,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install wheel
-        pip install -e ".[dev]"
+        pip install -e ".[dev, text_embedding]"
 
     - name: test with coverage
       run: |
