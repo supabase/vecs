@@ -34,6 +34,7 @@ from vecs.exc import (
     CollectionAlreadyExists,
     CollectionNotFound,
     FilterError,
+    MismatchedDimension,
     Unreachable,
 )
 from vecs.experimental.adapter import Adapter, AdapterContext
@@ -150,9 +151,9 @@ class Collection:
             ]
         )
         if len(reported_dimensions) == 0:
-            raise Exception("One of dimension or adapter must provide a dimension")
+            raise ArgError("One of dimension or adapter must provide a dimension")
         elif len(reported_dimensions) > 1:
-            raise Exception(
+            raise MismatchedDimension(
                 "Dimensions reported by adapter, dimension, and collection do not match"
             )
 
@@ -215,7 +216,7 @@ class Collection:
             [x for x in [self.dimension, collection_dimension] if x is not None]
         )
         if len(reported_dimensions) > 1:
-            raise Exception(
+            raise MismatchedDimension(
                 "Dimensions reported by adapter, dimension, and existing collection do not match"
             )
 
@@ -284,11 +285,8 @@ class Collection:
             pipeline = flu(records).chunk(chunk_size)
         else:
             # Construct a lazy pipeline of steps to transform and chunk user input
-            pipeline = (
-                flu(records)
-                .map(lambda y: self.adapter(*y, AdapterContext("upsert")))
-                .flatten()
-                .chunk(chunk_size)
+            pipeline = flu(self.adapter(records, AdapterContext("upsert"))).chunk(
+                chunk_size
             )
 
         with self.client.Session() as sess:
@@ -428,21 +426,18 @@ class Collection:
             )
 
         if skip_adapter:
-            adapted_query = [data]
+            adapted_query = [("", data, {})]
         else:
             # Adapt the query using the pipeline
             adapted_query = [
                 x
                 for x in self.adapter(
-                    id="",
-                    media=data,
-                    metadata={},
-                    adapter_context=AdapterContext("query"),
+                    records=[("", data, {})], adapter_context=AdapterContext("query")
                 )
             ]
 
         if len(adapted_query) != 1:
-            raise Exception("Failed to produce query vector from input")
+            raise ArgError("Failed to produce exactly one query vector from input")
 
         _, vec, _ = next(iter(adapted_query))
 

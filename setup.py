@@ -74,5 +74,6 @@ setuptools.setup(
     extras_require={
         "dev": ["pytest", "parse", "numpy", "pytest-cov"],
         "docs": ["mkdocs", "pygments", "pymdown-extensions", "pymarkdown"],
+        "text_embedding": ["sentence-transformers==2.*"],
     },
 )

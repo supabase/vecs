@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generator, Optional, Tuple
+from typing import Any, Dict, Generator, Iterable, Optional, Tuple
 
 from .base import AdapterContext, AdapterStep
 
@@ -13,9 +13,8 @@ class NoOp(AdapterStep):
 
     def __call__(
         self,
-        id: str,
-        media: Any,
-        metadata: Optional[Dict],
-        adapter_context: AdapterContext,
+        records: Iterable[Tuple[str, Any, Optional[Dict]]],
+        adapter_context: AdapterContext,  # pyright: ignore
     ) -> Generator[Tuple[str, Any, Dict], None, None]:
-        yield (id, media, metadata or {})
+        for id, media, metadata in records:
+            yield (id, media, metadata or {})

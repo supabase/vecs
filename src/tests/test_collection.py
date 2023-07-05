@@ -193,6 +193,10 @@ def test_query(client: vecs.Client) -> None:
     with pytest.raises(vecs.exc.ArgError):
         res = bar.query(data=query_vec, limit=top_k, measure="invalid")
 
+    # skip_adapter has no effect (no adapter present)
+    res = bar.query(data=query_vec, limit=top_k, skip_adapter=True)
+    assert len(res) == top_k
+
     # include_value
     res = bar.query(
         data=query_vec,

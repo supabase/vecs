@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Dict, Generator, List, Optional, Tuple
+from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple
 
-from flupy import flu
+from vecs.exc import ArgError
 
 
 class AdapterContext(str, Enum):
@@ -35,9 +35,7 @@ class AdapterStep(ABC):
     @abstractmethod
     def __call__(
         self,
-        id: str,
-        media: Any,
-        metadata: Optional[Dict],
+        records: Iterable[Tuple[str, Any, Optional[Dict]]],
         adapter_context: AdapterContext,
     ) -> Generator[Tuple[str, Any, Dict], None, None]:
         pass
@@ -47,7 +45,7 @@ class Adapter:
     def __init__(self, steps: List[AdapterStep]):
         self.steps = steps
         if len(steps) < 1:
-            raise Exception("Adapter must contain at least 1 step")
+            raise ArgError("Adapter must contain at least 1 step")
 
     @property
     def exported_dimension(self) -> Optional[int]:
@@ -60,13 +58,11 @@ class Adapter:
 
     def __call__(
         self,
-        id: str,
-        media: Any,
-        metadata: Optional[Dict],
+        records: Iterable[Tuple[str, Any, Optional[Dict]]],
         adapter_context: AdapterContext,
     ) -> Generator[Tuple[str, Any, Dict], None, None]:
-        pipeline = flu([(id, media, metadata, adapter_context)])
+        pipeline = records
         for step in self.steps:
-            pipeline = pipeline.map(lambda x: step(*x)).flatten()
+            pipeline = step(pipeline, adapter_context)
 
-        yield from pipeline
+        yield from pipeline  # type: ignore

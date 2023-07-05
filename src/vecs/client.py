@@ -92,24 +92,13 @@ class Client:
         """
         from vecs.collection import Collection
 
-        reported_dimensions = set(
-            [
-                x
-                for x in [dimension, (adapter.exported_dimension if adapter else None)]
-                if x is not None
-            ]
-        )
-        if len(reported_dimensions) == 0:
-            raise Exception("One of dimension or adapter must provide a dimension")
-        if len(reported_dimensions) > 1:
-            raise Exception(
-                "Dimensions reported by adapter, dimension, and existing collection do not match"
-            )
-
-        resolved_dimension: int = next(iter(reported_dimensions))
+        adapter_dimension = adapter.exported_dimension if adapter else None
 
         collection = Collection(
-            name=name, dimension=resolved_dimension, client=self, adapter=adapter
+            name=name,
+            dimension=dimension or adapter_dimension,  # type: ignore
+            client=self,
+            adapter=adapter,
         )
 
         return collection._create_if_not_exists()
