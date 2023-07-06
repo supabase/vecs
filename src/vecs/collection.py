@@ -439,7 +439,7 @@ class Collection:
         if len(adapted_query) != 1:
             raise ArgError("Failed to produce exactly one query vector from input")
 
-        _, vec, _ = next(iter(adapted_query))
+        _, vec, _ = adapted_query[0]
 
         distance_lambda = INDEX_MEASURE_TO_SQLA_ACC.get(imeasure)
         if distance_lambda is None:

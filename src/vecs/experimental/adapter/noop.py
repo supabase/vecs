@@ -22,7 +22,7 @@ class NoOp(AdapterStep):
         Args:
             dimension (int): The dimension of the input vectors.
         """
-        self.dimension = dimension
+        self._dimension = dimension
 
     @property
     def exported_dimension(self) -> Optional[int]:
@@ -32,7 +32,7 @@ class NoOp(AdapterStep):
         Returns:
             int: The dimension of the input vectors.
         """
-        return self.dimension
+        return self._dimension
 
     def __call__(
         self,
