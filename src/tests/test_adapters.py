@@ -1,3 +1,5 @@
+from itertools import zip_longest
+
 import numpy as np
 import pytest
 
@@ -88,16 +90,25 @@ def test_paragraph_chunker_adapter() -> None:
 
 def test_text_embedding_adapter() -> None:
     emb = TextEmbedding(model="all-MiniLM-L6-v2")
-    res = [
-        x
-        for x in emb(
-            [("1", "first para\n\nnext para", {"a": 1})], AdapterContext("upsert")
-        )
+
+    records = [
+        ("1", "first one", {"a": 1}),
+        ("2", "next one", {"a": 2}),
+        ("3", "last one", {"a": 3}),
     ]
-    assert len(res) == 1
+    res = [x for x in emb(records, AdapterContext("upsert"))]
+    assert len(res) == 3
     assert res[0][0] == "1"
     assert res[0][2] == {"a": 1}
     assert len(res[0][1]) == 384
+
+    # test larger batch size does not impact result
+    ada = TextEmbedding(model="all-MiniLM-L6-v2", batch_size=2)
+    res_batch = [x for x in ada(records, AdapterContext("upsert"))]
+    for (l_id, l_vec, l_meta), (r_id, r_vec, r_meta) in zip_longest(res, res_batch):  # type: ignore
+        assert l_id == r_id
+        assert np.allclose(l_vec, r_vec, rtol=0.003)
+        assert l_meta == r_meta
 
 
 def test_text_integration_adapter(client: vecs.Client) -> None:

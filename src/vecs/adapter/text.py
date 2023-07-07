@@ -6,6 +6,8 @@ All public classes, enums, and functions are re-exported by `vecs.adapters` modu
 """
 from typing import Any, Dict, Generator, Iterable, Literal, Optional, Tuple
 
+from flupy import flu
+
 from vecs.exc import MissingDependency
 
 from .base import AdapterContext, AdapterStep
@@ -33,12 +35,13 @@ class TextEmbedding(AdapterStep):
     embeddings using a specified sentence transformers model.
     """
 
-    def __init__(self, *, model: TextEmbeddingModel):
+    def __init__(self, *, model: TextEmbeddingModel, batch_size: int = 8):
         """
         Initializes the TextEmbedding adapter with a sentence transformers model.
 
         Args:
             model (TextEmbeddingModel): The sentence transformers model to use for embeddings.
+            batch_size (int): The number of records to encode simultaneously.
 
         Raises:
             MissingDependency: If the sentence_transformers library is not installed.
@@ -52,6 +55,7 @@ class TextEmbedding(AdapterStep):
 
         self.model = ST(model)
         self._exported_dimension = self.model.get_sentence_embedding_dimension()
+        self.batch_size = batch_size
 
     @property
     def exported_dimension(self) -> Optional[int]:
@@ -78,10 +82,14 @@ class TextEmbedding(AdapterStep):
         Yields:
             Tuple[str, Any, Dict]: The id, the embedding, and the metadata.
         """
-        for id, media, metadata in records:
-            # XXX: (optional) implement chunking to improve throughput
-            embedding = self.model.encode(media, normalize_embeddings=True)
-            yield (id, embedding, metadata or {})
+        for batch in flu(records).chunk(self.batch_size):
+            batch_records = [x for x in batch]
+            media = [text for _, text, _ in batch_records]
+
+            embeddings = self.model.encode(media, normalize_embeddings=True)
+
+            for (id, _, metadata), embedding in zip(batch_records, embeddings):  # type: ignore
+                yield (id, embedding, metadata or {})
 
 
 class ParagraphChunker(AdapterStep):
