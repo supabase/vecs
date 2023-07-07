@@ -29,6 +29,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import postgresql
 
+from vecs.adapter import Adapter, AdapterContext, NoOp
 from vecs.exc import (
     ArgError,
     CollectionAlreadyExists,
@@ -37,8 +38,6 @@ from vecs.exc import (
     MismatchedDimension,
     Unreachable,
 )
-from vecs.experimental.adapter import Adapter, AdapterContext
-from vecs.experimental.adapter.noop import NoOp
 
 if TYPE_CHECKING:
     from vecs.client import Client

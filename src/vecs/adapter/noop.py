@@ -2,6 +2,8 @@
 The `vecs.experimental.adapter.noop` module provides a default no-op (no operation) adapter
 that passes the inputs through without any modification. This can be useful when no specific
 adapter processing is required.
+
+All public classes, enums, and functions are re-exported by `vecs.adapters` module.
 """
 
 from typing import Any, Dict, Generator, Iterable, Optional, Tuple

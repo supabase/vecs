@@ -1,6 +1,8 @@
 """
 The `vecs.experimental.adapter.text` module provides adapter steps specifically designed for
 handling text data. It provides two main classes, `TextEmbedding` and `ParagraphChunker`.
+
+All public classes, enums, and functions are re-exported by `vecs.adapters` module.
 """
 from typing import Any, Dict, Generator, Iterable, Literal, Optional, Tuple
 

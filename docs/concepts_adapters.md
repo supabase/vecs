@@ -23,8 +23,8 @@ Then create a collection with an adapter to chunk text into paragraphs and embed
 
 ```python
 import vecs
-from vecs.experimental.adapter import Adapter
-from vecs.experimental.adapter.text import ParagraphChunker, TextEmbedding
+from vecs.adapter import Adapter
+from vecs.adapter.text import ParagraphChunker, TextEmbedding
 
 # create vector store client
 DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"

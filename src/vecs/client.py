@@ -13,8 +13,8 @@ from deprecated import deprecated
 from sqlalchemy import MetaData, create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+from vecs.adapter import Adapter
 from vecs.exc import CollectionNotFound
-from vecs.experimental.adapter import Adapter
 
 if TYPE_CHECKING:
     from vecs.collection import Collection

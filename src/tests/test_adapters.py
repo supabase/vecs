@@ -2,10 +2,10 @@ import numpy as np
 import pytest
 
 import vecs
+from vecs.adapter import Adapter, AdapterContext, AdapterStep
+from vecs.adapter.noop import NoOp
+from vecs.adapter.text import ParagraphChunker, TextEmbedding
 from vecs.exc import ArgError, MismatchedDimension
-from vecs.experimental.adapter import Adapter, AdapterContext, AdapterStep
-from vecs.experimental.adapter.noop import NoOp
-from vecs.experimental.adapter.text import ParagraphChunker, TextEmbedding
 
 
 def test_create_collection_with_adapter(client: vecs.Client) -> None:
