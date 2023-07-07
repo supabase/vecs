@@ -178,6 +178,70 @@ with vecs.create_client(DB_CONNECTION) as vx:
 ```
 
 
+## Adapters
+
+Adapters are an optional feature to transform data before adding to or querying from a collection. Adapters make it possible to interact with a collection using only your project's native data type, rather than manually handling vectors.
+
+For a complete list of available adapters, see [built-in adapters](concepts_adapters.md#built-in-adapters).
+
+As an example, we'll create a collection with an adapter that chunks text into paragraphs and converts each chunk into an embedding vector using the `all-Mini-LM6-v2` model.
+
+First, install `vecs` with optional dependencies for text embeddings:
+```sh
+pip install "vecs[text_embedding]"
+```
+
+Then create a collection with an adapter to chunk text into paragraphs and embed each paragraph using the `all-Mini-LM6-v2` 384 dimensional text embedding model.
+
+```python
+import vecs
+from vecs.adapter import Adapter, ParagraphChunker, TextEmbedding
+
+# create vector store client
+vx = vecs.Client("postgresql://<user>:<password>@<host>:<port>/<db_name>")
+
+# create a collection with an adapter
+docs = vx.get_or_create_collection(
+    name="docs",
+    adapter=Adapter(
+        [
+            ParagraphChunker(skip_during_query=True),
+            TextEmbedding(model='all-Mini-LM6-v2'),
+        ]
+    )
+)
+
+```
+
+With the adapter registered against the collection, we can upsert records into the collection passing in text rather than vectors.
+
+```python
+# add records to the collection using text as the media type
+docs.upsert(
+    records=[
+        (
+         "vec0",
+         "four score and ....", # <- note that we can now pass text here
+         {"year": 1973}
+        ),
+        (
+         "vec1",
+         "hello, world!",
+         {"year": "2012"}
+        )
+    ]
+)
+```
+
+Similarly, we can query the collection using text.
+```python
+
+# search by text
+docs.query(data="foo bar")
+```
+
+
+
 ---------
 ## Deprecated
 
