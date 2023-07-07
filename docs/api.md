@@ -32,7 +32,7 @@ vx = vecs.create_client(DB_CONNECTION)
 
 ## Get or Create a Collection
 
-You can get, or create a collection if it doesn't exist, specifying the collections name and the number of dimensions in the vectors you intend to store.
+You can get a collection (or create if it doesn't exist), specifying the collection's name and the number of dimensions for the vectors you intend to store.
 
 ```python
 docs = vx.get_or_create_collection(name="docs", dimension=3)
