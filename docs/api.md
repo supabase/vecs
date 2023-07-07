@@ -253,7 +253,7 @@ docs.query(data="foo bar")
 You can create a collection to store vectors specifying the collections name and the number of dimensions in the vectors you intend to store.
 
 ```python
-docs = vx.get_or_create_collection(name="docs", dimension=3)
+docs = vx.create_collection(name="docs", dimension=3)
 ```
 
 
