@@ -1,6 +1,6 @@
 # Adapters
 
-Adapters are an optional feature to transform data before adding to or querying from a collection. Adapters provide a customizable and modular way to express data transformations and make interacting with collections more erganomic.
+Adapters are an optional feature to transform data before adding to or querying from a collection. Adapters provide a customizable and modular way to express data transformations and make interacting with collections more ergonomic.
 
 Additionally, adapter transformations are applied lazily and can internally batch operations which can make them more memory and CPU efficient compared to manually executing transforms.
 
