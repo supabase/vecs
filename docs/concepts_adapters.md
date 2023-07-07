@@ -75,7 +75,7 @@ Have an idea for a useful adapter? [Open an issue](https://github.com/supabase/v
 
 ### ParagraphChunker
 
-The `ParagraphChunker` `AdapterStep` splits text media into paragraphs and yields each paragraph as a separate record. That can be a useful pre-processing step when upserting large documents that contain multiple paragraphs. The `ParagraphChunker` delimits paragraphs by two consecutive line breaks `\n\n`.
+The `ParagraphChunker` `AdapterStep` splits text media into paragraphs and yields each paragraph as a separate record. That can be a useful preprocessing step when upserting large documents that contain multiple paragraphs. The `ParagraphChunker` delimits paragraphs by two consecutive line breaks `\n\n`.
 
 `ParagrphChunker` is a pre-preocessing step and must be used in combination with another adapter step like `TextEmbedding` to transform the chunked text into a vector.
 
