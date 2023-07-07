@@ -180,7 +180,7 @@ with vecs.create_client(DB_CONNECTION) as vx:
 
 ## Adapters
 
-Adapters are an optional feature to transform data before adding to or querying from a collection. Adapters make it possible to interact with a collection using only your project's native data type, rather than manually handling vectors.
+Adapters are an optional feature to transform data before adding to or querying from a collection. Adapters make it possible to interact with a collection using only your project's native data type (eg. just raw text), rather than manually handling vectors.
 
 For a complete list of available adapters, see [built-in adapters](concepts_adapters.md#built-in-adapters).
 
