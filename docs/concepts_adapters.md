@@ -101,7 +101,7 @@ When querying the collection, you probably do not want to chunk the text. To ski
 
 ### TextEmbedding
 
-The `TextEmbedding` `AdapterStep` accepts text and converts it into a vector that can be consumed by the `Collection`. `TextEmbedding` supports all models available in the `sentence_transformers` package. A complete list of supported models is available in `vecs.adapter.TextEmbeddingModel`.
+The `TextEmbedding` `AdapterStep` accepts text and converts it into a vector that can be consumed by the `Collection`. `TextEmbedding` supports all models available in the [`sentence_transformers`](https://www.sbert.net) package. A complete list of supported models is available in `vecs.adapter.TextEmbeddingModel`.
 
 ```python
 from vecs.adapter import Adapter, TextEmbedding
