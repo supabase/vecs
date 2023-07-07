@@ -124,7 +124,7 @@ docs.query(data="foo bar")
 
 Adapters are objects that take in data in the form of `Iterable[Tuple[str, Any, Optional[Dict]]]` where `Tuple[str, Any, Optional[Dict]]]` represents records of `(id, media, metadata)`.
 
-The main use of Adapters is to transform the media part of the records into a form that is ready to be ingested into the collection (like converting text into embeddings). However, Adapters can also modify the id or metadata if required.
+The main use of Adapters is to transform the media part of the records into a form that is ready to be ingested into the collection (like converting text into embeddings). However, Adapters can also modify the `id` or `metadata` if required.
 
 Due to the common interface, adapters may be comprised of multiple adapter steps to create multi-stage preprocessing pipelines. For example, a multi-step adapter might first convert text into chunks and then convert each text chunk into an embedding vector.
 
