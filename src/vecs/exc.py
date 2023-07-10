@@ -42,6 +42,14 @@ class ArgError(VecsException):
     ...
 
 
+class MismatchedDimension(ArgError):
+    """
+    Exception raised when multiple sources of truth for a collection's embedding dimension do not match.
+    """
+
+    ...
+
+
 class FilterError(VecsException):
     """
     Exception raised when there's an error related to filter usage in a query.
@@ -62,6 +70,14 @@ class Unreachable(VecsException):
     """
     Exception raised when an unreachable part of the code is executed.
     This is typically used for error handling in cases that should be logically impossible.
+    """
+
+    ...
+
+
+class MissingDependency(VecsException, ImportError):
+    """
+    Exception raised when attempting to access a feature that requires an optional dependency when the optional dependency is not present.
     """
 
     ...

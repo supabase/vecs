@@ -56,10 +56,10 @@ DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
 vx = vecs.Client(DB_CONNECTION)
 
 # create a collection named 'sentences' with 512 dimensional vectors (default dimension for text-embedding-ada-002)
-sentences = vx.create_collection(name="sentences", dimension=1536)
+sentences = vx.get_or_create_collection(name="sentences", dimension=1536)
 
 # upsert the embeddings into the 'sentences' collection
-sentences.upsert(vectors=embeddings)
+sentences.upsert(records=embeddings)
 
 # create an index for the 'sentences' collection
 sentences.create_index()
@@ -81,7 +81,7 @@ query_embedding = response["data"][0]["embedding"]
 
 # query the 'sentences' collection for the most similar sentences
 results = sentences.query(
-    query_vector=query_embedding,
+    data=query_embedding,
     limit=3,
     include_value = True
 )

@@ -57,11 +57,11 @@ DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
 vx = vecs.create_client(DB_CONNECTION)
 
 # create a collection of vectors with 3 dimensions
-docs = vx.create_collection(name="docs", dimension=3)
+docs = vx.get_or_create_collection(name="docs", dimension=3)
 
 # add records to the *docs* collection
 docs.upsert(
-    vectors=[
+    records=[
         (
          "vec0",           # the vector's identifier
          [0.1, 0.2, 0.3],  # the vector. list or np.array
@@ -80,7 +80,7 @@ docs.create_index()
 
 # query the collection filtering metadata for "year" = 2012
 docs.query(
-    query_vector=[0.4,0.5,0.6],      # required
+    data=[0.4,0.5,0.6],              # required
     limit=1,                         # number of records to return
     filters={"year": {"$eq": 2012}}, # metadata filters
 )

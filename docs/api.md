@@ -30,23 +30,12 @@ DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
 vx = vecs.create_client(DB_CONNECTION)
 ```
 
-## Create collection
+## Get or Create a Collection
 
-You can create a collection to store vectors specifying the collections name and the number of dimensions in the vectors you intend to store.
-
-```python
-docs = vx.create_collection(name="docs", dimension=3)
-```
-
-!!! note
-    If another collection exists with the same name, use [get_collection](#get-an-existing-collection) to retrieve it.
-
-## Get an existing collection
-
-To access a previously created collection, use `get_collection` to retrieve it by name
+You can get a collection (or create if it doesn't exist), specifying the collection's name and the number of dimensions for the vectors you intend to store.
 
 ```python
-docs = vx.get_collection(name="docs")
+docs = vx.get_or_create_collection(name="docs", dimension=3)
 ```
 
 ## Upserting vectors
@@ -56,7 +45,7 @@ docs = vx.get_collection(name="docs")
 ```python
 # add records to the collection
 docs.upsert(
-    vectors=[
+    records=[
         (
          "vec0",           # the vector's identifier
          [0.1, 0.2, 0.3],  # the vector. list or np.array
@@ -134,7 +123,7 @@ The simplest form of search is to provide a query vector.
 
 ```python
 docs.query(
-    query_vector=[0.4,0.5,0.6],  # required
+    data=[0.4,0.5,0.6],          # required
     limit=5,                     # number of records to return
     filters={},                  # metadata filters
     measure="cosine_distance",   # distance measure to use
@@ -156,7 +145,7 @@ In context:
 
 ```python
 docs.query(
-    query_vector=[0.4,0.5,0.6],
+    data=[0.4,0.5,0.6],
     filters={"year": {"$eq": 2012}}, # metadata filters
 )
 ```
@@ -187,3 +176,96 @@ with vecs.create_client(DB_CONNECTION) as vx:
 
 # connections are now closed
 ```
+
+
+## Adapters
+
+Adapters are an optional feature to transform data before adding to or querying from a collection. Adapters make it possible to interact with a collection using only your project's native data type (eg. just raw text), rather than manually handling vectors.
+
+For a complete list of available adapters, see [built-in adapters](concepts_adapters.md#built-in-adapters).
+
+As an example, we'll create a collection with an adapter that chunks text into paragraphs and converts each chunk into an embedding vector using the `all-Mini-LM6-v2` model.
+
+First, install `vecs` with optional dependencies for text embeddings:
+```sh
+pip install "vecs[text_embedding]"
+```
+
+Then create a collection with an adapter to chunk text into paragraphs and embed each paragraph using the `all-Mini-LM6-v2` 384 dimensional text embedding model.
+
+```python
+import vecs
+from vecs.adapter import Adapter, ParagraphChunker, TextEmbedding
+
+# create vector store client
+vx = vecs.Client("postgresql://<user>:<password>@<host>:<port>/<db_name>")
+
+# create a collection with an adapter
+docs = vx.get_or_create_collection(
+    name="docs",
+    adapter=Adapter(
+        [
+            ParagraphChunker(skip_during_query=True),
+            TextEmbedding(model='all-Mini-LM6-v2'),
+        ]
+    )
+)
+
+```
+
+With the adapter registered against the collection, we can upsert records into the collection passing in text rather than vectors.
+
+```python
+# add records to the collection using text as the media type
+docs.upsert(
+    records=[
+        (
+         "vec0",
+         "four score and ....", # <- note that we can now pass text here
+         {"year": 1973}
+        ),
+        (
+         "vec1",
+         "hello, world!",
+         {"year": "2012"}
+        )
+    ]
+)
+```
+
+Similarly, we can query the collection using text.
+```python
+
+# search by text
+docs.query(data="foo bar")
+```
+
+
+
+---------
+## Deprecated
+
+### Create collection
+
+!!! note
+    Deprecated: use [get_or_create_collection](#get-or-create-a-collection)
+
+You can create a collection to store vectors specifying the collections name and the number of dimensions in the vectors you intend to store.
+
+```python
+docs = vx.create_collection(name="docs", dimension=3)
+```
+
+
+### Get an existing collection
+
+!!! note
+    Deprecated: use [get_or_create_collection](#get-or-create-a-collection)
+
+To access a previously created collection, use `get_collection` to retrieve it by name
+
+```python
+docs = vx.get_collection(name="docs")
+```
+
+

@@ -83,10 +83,10 @@ DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
 vx = vecs.Client(DB_CONNECTION)
 
 # create a collection named 'sentences' with 384 dimensional vectors (default dimension for paraphrase-MiniLM-L6-v2)
-sentences = vx.create_collection(name="sentences", dimension=384)
+sentences = vx.get_or_create_collection(name="sentences", dimension=384)
 
 # upsert the embeddings into the 'sentences' collection
-sentences.upsert(vectors=records)
+sentences.upsert(records=records)
 
 # create an index for the 'sentences' collection
 sentences.create_index()
@@ -113,7 +113,7 @@ query_embedding = response.json()["embeddings"]
 
 # query the 'sentences' collection for the most similar sentences
 results = sentences.query(
-    query_vector=query_embedding,
+    data=query_embedding,
     limit=3,
     include_value = True
 )

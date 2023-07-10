@@ -10,7 +10,7 @@ import math
 import uuid
 import warnings
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from flupy import flu
 from pgvector.sqlalchemy import Vector
@@ -29,11 +29,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import postgresql
 
+from vecs.adapter import Adapter, AdapterContext, NoOp
 from vecs.exc import (
     ArgError,
     CollectionAlreadyExists,
     CollectionNotFound,
     FilterError,
+    MismatchedDimension,
     Unreachable,
 )
 
@@ -112,7 +114,13 @@ class Collection:
     Note: Some methods of this class can raise exceptions from the `vecs.exc` module if errors occur.
     """
 
-    def __init__(self, name: str, dimension: int, client: Client):
+    def __init__(
+        self,
+        name: str,
+        dimension: int,
+        client: Client,
+        adapter: Optional[Adapter] = None,
+    ):
         """
         Initializes a new instance of the `Collection` class.
 
@@ -129,6 +137,24 @@ class Collection:
         self.dimension = dimension
         self.table = build_table(name, client.meta, dimension)
         self._index: Optional[str] = None
+        self.adapter = adapter or Adapter(steps=[NoOp(dimension=dimension)])
+
+        reported_dimensions = set(
+            [
+                x
+                for x in [
+                    dimension,
+                    adapter.exported_dimension if adapter else None,
+                ]
+                if x is not None
+            ]
+        )
+        if len(reported_dimensions) == 0:
+            raise ArgError("One of dimension or adapter must provide a dimension")
+        elif len(reported_dimensions) > 1:
+            raise MismatchedDimension(
+                "Dimensions reported by adapter, dimension, and collection do not match"
+            )
 
     def __repr__(self):
         """
@@ -150,6 +176,53 @@ class Collection:
             with sess.begin():
                 stmt = select(func.count()).select_from(self.table)
                 return sess.execute(stmt).scalar() or 0
+
+    def _create_if_not_exists(self):
+        """
+        PRIVATE
+
+        Creates a new collection in the database if it doesn't already exist
+
+        Returns:
+            Collection: The found or created collection.
+        """
+        query = text(
+            f"""
+        select
+            relname as table_name,
+            atttypmod as embedding_dim
+        from
+            pg_class pc
+            join pg_attribute pa
+                on pc.oid = pa.attrelid
+        where
+            pc.relnamespace = 'vecs'::regnamespace
+            and pc.relkind = 'r'
+            and pa.attname = 'vec'
+            and not pc.relname ^@ '_'
+            and pc.relname = :name
+        """
+        ).bindparams(name=self.name)
+        with self.client.Session() as sess:
+            query_result = sess.execute(query).fetchone()
+
+            if query_result:
+                _, collection_dimension = query_result
+            else:
+                collection_dimension = None
+
+        reported_dimensions = set(
+            [x for x in [self.dimension, collection_dimension] if x is not None]
+        )
+        if len(reported_dimensions) > 1:
+            raise MismatchedDimension(
+                "Dimensions reported by adapter, dimension, and existing collection do not match"
+            )
+
+        if not collection_dimension:
+            self.table.create(self.client.engine)
+
+        return self
 
     def _create(self):
         """
@@ -182,32 +255,42 @@ class Collection:
         Returns:
             Collection: The deleted collection.
         """
+        from sqlalchemy.schema import DropTable
 
-        collection_exists = self.__class__._does_collection_exist(
-            self.client, self.name
-        )
-        if not collection_exists:
-            raise CollectionNotFound("Collection with requested name not found")
-        self.table.drop(self.client.engine)
+        with self.client.Session() as sess:
+            sess.execute(DropTable(self.table, if_exists=True))
+            sess.commit()
+
         return self
 
     def upsert(
-        self, vectors: Iterable[Tuple[str, Iterable[Numeric], Metadata]]
+        self, records: Iterable[Tuple[str, Any, Metadata]], skip_adapter: bool = False
     ) -> None:
         """
         Inserts or updates *vectors* records in the collection.
 
         Args:
-            vectors (Iterable[Tuple[str, Iterable[Numeric], Metadata]]): An iterable of vectors to upsert.
+            vectors (Iterable[Tuple[str, Any, Metadata]]): An iterable of vectors to upsert.
                 Each vector is represented as a tuple where the first element is a unique string identifier,
                 the second element is an iterable of numeric values, and the third element is metadata associated with the vector.
+
+            skip_adapter (bool): Should the adapter be skipped while upserting. i.e. if vectors are being
+                provided, rather than a media type that needs to be transformed
         """
 
         chunk_size = 500
 
+        if skip_adapter:
+            pipeline = flu(records).chunk(chunk_size)
+        else:
+            # Construct a lazy pipeline of steps to transform and chunk user input
+            pipeline = flu(self.adapter(records, AdapterContext("upsert"))).chunk(
+                chunk_size
+            )
+
         with self.client.Session() as sess:
             with sess.begin():
-                for chunk in flu(vectors).chunk(chunk_size):
+                for chunk in pipeline:
                     stmt = postgresql.insert(self.table).values(chunk)
                     stmt = stmt.on_conflict_do_update(
                         index_elements=[self.table.c.id],
@@ -290,7 +373,7 @@ class Collection:
 
     def query(
         self,
-        query_vector: Iterable[Numeric],
+        data: Union[Iterable[Numeric], Any],
         limit: int = 10,
         filters: Optional[Dict] = None,
         measure: Union[IndexMeasure, str] = IndexMeasure.cosine_distance,
@@ -298,6 +381,7 @@ class Collection:
         include_metadata: bool = False,
         *,
         probes: Optional[int] = None,
+        skip_adapter: bool = False,
     ) -> Union[List[Record], List[str]]:
         """
         Executes a similarity search in the collection.
@@ -305,7 +389,7 @@ class Collection:
         The return type is dependent on arguments *include_value* and *include_metadata*
 
         Args:
-            query_vector (Iterable[Numeric]): The vector to use as the query.
+            query_vector (Any): The vector to use as the query.
             limit (int, optional): The maximum number of results to return. Defaults to 10.
             filters (Optional[Dict], optional): Filters to apply to the search. Defaults to None.
             measure (Union[IndexMeasure, str], optional): The distance measure to use for the search. Defaults to 'cosine_distance'.
@@ -340,12 +424,28 @@ class Collection:
                 f"Query does not have a covering index for {imeasure}. See Collection.create_index"
             )
 
+        if skip_adapter:
+            adapted_query = [("", data, {})]
+        else:
+            # Adapt the query using the pipeline
+            adapted_query = [
+                x
+                for x in self.adapter(
+                    records=[("", data, {})], adapter_context=AdapterContext("query")
+                )
+            ]
+
+        if len(adapted_query) != 1:
+            raise ArgError("Failed to produce exactly one query vector from input")
+
+        _, vec, _ = adapted_query[0]
+
         distance_lambda = INDEX_MEASURE_TO_SQLA_ACC.get(imeasure)
         if distance_lambda is None:
             # unreachable
             raise ArgError("invalid distance_measure")  # pragma: no cover
 
-        distance_clause = distance_lambda(self.table.c.vec)(query_vector)
+        distance_clause = distance_lambda(self.table.c.vec)(vec)
 
         cols = [self.table.c.id]
 

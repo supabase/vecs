@@ -7,11 +7,13 @@ All public classes, enums, and functions are re-exported by the top level `vecs`
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
+from deprecated import deprecated
 from sqlalchemy import MetaData, create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+from vecs.adapter import Adapter
 from vecs.exc import CollectionNotFound
 
 if TYPE_CHECKING:
@@ -64,6 +66,44 @@ class Client:
                 sess.execute(text("create schema if not exists vecs;"))
                 sess.execute(text("create extension if not exists vector;"))
 
+    def get_or_create_collection(
+        self,
+        name: str,
+        *,
+        dimension: Optional[int] = None,
+        adapter: Optional[Adapter] = None,
+    ) -> Collection:
+        """
+        Get a vector collection by name, or create it if no collection with
+        *name* exists.
+
+        Args:
+            name (str): The name of the collection.
+
+        Keyword Args:
+            dimension (int): The dimensionality of the vectors in the collection.
+            pipeline (int): The dimensionality of the vectors in the collection.
+
+        Returns:
+            Collection: The created collection.
+
+        Raises:
+            CollectionAlreadyExists: If a collection with the same name already exists
+        """
+        from vecs.collection import Collection
+
+        adapter_dimension = adapter.exported_dimension if adapter else None
+
+        collection = Collection(
+            name=name,
+            dimension=dimension or adapter_dimension,  # type: ignore
+            client=self,
+            adapter=adapter,
+        )
+
+        return collection._create_if_not_exists()
+
+    @deprecated("use Client.get_or_create_collection")
     def create_collection(self, name: str, dimension: int) -> Collection:
         """
         Create a new vector collection.
@@ -82,6 +122,7 @@ class Client:
 
         return Collection(name, dimension, self)._create()
 
+    @deprecated("use Client.get_or_create_collection")
     def get_collection(self, name: str) -> Collection:
         """
         Retrieve an existing vector collection.
@@ -121,7 +162,11 @@ class Client:
                 raise CollectionNotFound("No collection found with requested name")
 
             name, dimension = query_result
-            return Collection(name, dimension, self)
+            return Collection(
+                name,
+                dimension,
+                self,
+            )
 
     def list_collections(self) -> List["Collection"]:
         """
@@ -138,14 +183,13 @@ class Client:
         """
         Delete a vector collection.
 
+        If no collection with requested name exists, does nothing.
+
         Args:
             name (str): The name of the collection.
 
         Returns:
             None
-
-        Raises:
-            CollectionNotFound: If no collection with the given name exists.
         """
         from vecs.collection import Collection
 
