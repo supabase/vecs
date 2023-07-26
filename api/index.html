@@ -317,15 +317,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#create-collection" class="md-nav__link">
-    Create collection
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#get-an-existing-collection" class="md-nav__link">
-    Get an existing collection
+  <a href="#get-or-create-a-collection" class="md-nav__link">
+    Get or Create a Collection
   </a>
   
 </li>
@@ -369,6 +362,40 @@
           <li class="md-nav__item">
   <a href="#disconnect" class="md-nav__link">
     Disconnect
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapters" class="md-nav__link">
+    Adapters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deprecated" class="md-nav__link">
+    Deprecated
+  </a>
+  
+    <nav class="md-nav" aria-label="Deprecated">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-collection" class="md-nav__link">
+    Create collection
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-an-existing-collection" class="md-nav__link">
+    Get an existing collection
   </a>
   
 </li>
@@ -446,6 +473,20 @@
     <li class="md-nav__item">
       <a href="../concepts_collections/" class="md-nav__link">
         Collections
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts_adapters/" class="md-nav__link">
+        Adapters
       </a>
     </li>
   
@@ -650,15 +691,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#create-collection" class="md-nav__link">
-    Create collection
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#get-an-existing-collection" class="md-nav__link">
-    Get an existing collection
+  <a href="#get-or-create-a-collection" class="md-nav__link">
+    Get or Create a Collection
   </a>
   
 </li>
@@ -711,6 +745,40 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#adapters" class="md-nav__link">
+    Adapters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deprecated" class="md-nav__link">
+    Deprecated
+  </a>
+  
+    <nav class="md-nav" aria-label="Deprecated">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-collection" class="md-nav__link">
+    Create collection
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-an-existing-collection" class="md-nav__link">
+    Get an existing collection
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -750,35 +818,27 @@
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># create vector store client</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">vx</span> <span class="o">=</span> <span class="n">vecs</span><span class="o">.</span><span class="n">create_client</span><span class="p">(</span><span class="n">DB_CONNECTION</span><span class="p">)</span>
 </span></code></pre></div></p>
-<h2 id="create-collection">Create collection</h2>
-<p>You can create a collection to store vectors specifying the collections name and the number of dimensions in the vectors you intend to store.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">docs</span> <span class="o">=</span> <span class="n">vx</span><span class="o">.</span><span class="n">create_collection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;docs&quot;</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-</span></code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If another collection exists with the same name, use <a href="#get-an-existing-collection">get_collection</a> to retrieve it.</p>
-</div>
-<h2 id="get-an-existing-collection">Get an existing collection</h2>
-<p>To access a previously created collection, use <code>get_collection</code> to retrieve it by name</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">docs</span> <span class="o">=</span> <span class="n">vx</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;docs&quot;</span><span class="p">)</span>
+<h2 id="get-or-create-a-collection">Get or Create a Collection</h2>
+<p>You can get a collection (or create if it doesn't exist), specifying the collection's name and the number of dimensions for the vectors you intend to store.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">docs</span> <span class="o">=</span> <span class="n">vx</span><span class="o">.</span><span class="n">get_or_create_collection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;docs&quot;</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="upserting-vectors">Upserting vectors</h2>
 <p><code>vecs</code> combines the concepts of "insert" and "update" into "upsert". Upserting records adds them to the collection if the <code>id</code> is not present, or updates the existing record if the <code>id</code> does exist.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># add records to the collection</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">docs</span><span class="o">.</span><span class="n">upsert</span><span class="p">(</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">vectors</span><span class="o">=</span><span class="p">[</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="p">(</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>         <span class="s2">&quot;vec0&quot;</span><span class="p">,</span>           <span class="c1"># the vector&#39;s identifier</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>         <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span>  <span class="c1"># the vector. list or np.array</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>         <span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">1973</span><span class="p">}</span>    <span class="c1"># associated  metadata</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="p">),</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="p">(</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>         <span class="s2">&quot;vec1&quot;</span><span class="p">,</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>         <span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>         <span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">2012</span><span class="p">}</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        <span class="p">)</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="p">]</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># add records to the collection</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">docs</span><span class="o">.</span><span class="n">upsert</span><span class="p">(</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">records</span><span class="o">=</span><span class="p">[</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="p">(</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>         <span class="s2">&quot;vec0&quot;</span><span class="p">,</span>           <span class="c1"># the vector&#39;s identifier</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>         <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span>  <span class="c1"># the vector. list or np.array</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>         <span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">1973</span><span class="p">}</span>    <span class="c1"># associated  metadata</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="p">),</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="p">(</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>         <span class="s2">&quot;vec1&quot;</span><span class="p">,</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>         <span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>         <span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">2012</span><span class="p">}</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>        <span class="p">)</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="p">]</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="create-an-index">Create an index</h2>
 <p>Collections can be queried immediately after being created.
@@ -789,12 +849,12 @@ you can still upsert new documents into the collection but you should rebuild th
 the collection more than doubles.</p>
 <p>Only one index may exist per-collection. By default, creating an index will replace any existing index.</p>
 <p>To create an index:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">##</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># INSERT RECORDS HERE</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1">##</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># index the collection to be queried by cosine distance</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">docs</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span><span class="n">measure</span><span class="o">=</span><span class="n">vecs</span><span class="o">.</span><span class="n">IndexMeasure</span><span class="o">.</span><span class="n">cosine_distance</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">##</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># INSERT RECORDS HERE</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">##</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># index the collection to be queried by cosine distance</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">docs</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span><span class="n">measure</span><span class="o">=</span><span class="n">vecs</span><span class="o">.</span><span class="n">IndexMeasure</span><span class="o">.</span><span class="n">cosine_distance</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Available options for query <code>measure</code> are:</p>
 <ul>
@@ -804,7 +864,7 @@ the collection more than doubles.</p>
 </ul>
 <p>which correspond to different methods for comparing query vectors to the vectors in the database.</p>
 <p>If you aren't sure which to use, stick with the default (cosine_distance) by omitting the parameter i.e.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">docs</span><span class="o">.</span><span class="n">create_index</span><span class="p">()</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">docs</span><span class="o">.</span><span class="n">create_index</span><span class="p">()</span>
 </span></code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -820,45 +880,109 @@ minutes for larger collections.</p>
 <p class="admonition-title">Note</p>
 <p>Indexes are essential for good performance. See <a href="#create-an-index">creating an index</a> for more info.</p>
 <p>If you do not create an index, every query will return a warning
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>query does not have a covering index for cosine_similarity. See Collection.create_index
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>query does not have a covering index for cosine_similarity. See Collection.create_index
 </span></code></pre></div>
 that incldues the <code>IndexMeasure</code> you should index.</p>
 </div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">docs</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">query_vector</span><span class="o">=</span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.6</span><span class="p">],</span>  <span class="c1"># required</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>                     <span class="c1"># number of records to return</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">filters</span><span class="o">=</span><span class="p">{},</span>                  <span class="c1"># metadata filters</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">measure</span><span class="o">=</span><span class="s2">&quot;cosine_distance&quot;</span><span class="p">,</span>   <span class="c1"># distance measure to use</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">include_value</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>         <span class="c1"># should distance measure values be returned?</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">include_metadata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>      <span class="c1"># should record metadata be returned?</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">docs</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.6</span><span class="p">],</span>          <span class="c1"># required</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>                     <span class="c1"># number of records to return</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">filters</span><span class="o">=</span><span class="p">{},</span>                  <span class="c1"># metadata filters</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">measure</span><span class="o">=</span><span class="s2">&quot;cosine_distance&quot;</span><span class="p">,</span>   <span class="c1"># distance measure to use</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">include_value</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>         <span class="c1"># should distance measure values be returned?</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">include_metadata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>      <span class="c1"># should record metadata be returned?</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">)</span>
 </span></code></pre></div>
 <p>Which returns a list of vector record <code>ids</code>.</p>
 <h3 id="metadata-filtering">Metadata Filtering</h3>
 <p>The metadata that is associated with each record can also be filtered during a query.</p>
 <p>As an example, <code>{"year": {"$eq": 2005}}</code> filters a <code>year</code> metadata key to be equal to 2005</p>
 <p>In context:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">docs</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">query_vector</span><span class="o">=</span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.6</span><span class="p">],</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$eq&quot;</span><span class="p">:</span> <span class="mi">2012</span><span class="p">}},</span> <span class="c1"># metadata filters</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">docs</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.6</span><span class="p">],</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$eq&quot;</span><span class="p">:</span> <span class="mi">2012</span><span class="p">}},</span> <span class="c1"># metadata filters</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">)</span>
 </span></code></pre></div>
 <p>For a complete reference, see the <a href="../concepts_metadata/">metadata guide</a>.</p>
 <h3 id="disconnect">Disconnect</h3>
 <p>When you're done with a collection, be sure to disconnect the client from the database.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">vx</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">vx</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
 </span></code></pre></div>
 <p>alternatively, use the client as a context manager and it will automatically close the connection on exit.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">import</span> <span class="nn">vecs</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">DB_CONNECTION</span> <span class="o">=</span> <span class="s2">&quot;postgresql://&lt;user&gt;:&lt;password&gt;@&lt;host&gt;:&lt;port&gt;/&lt;db_name&gt;&quot;</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># create vector store client</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">with</span> <span class="n">vecs</span><span class="o">.</span><span class="n">create_client</span><span class="p">(</span><span class="n">DB_CONNECTION</span><span class="p">)</span> <span class="k">as</span> <span class="n">vx</span><span class="p">:</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="c1"># do some work here</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="k">pass</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="c1"># connections are now closed</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">import</span> <span class="nn">vecs</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">DB_CONNECTION</span> <span class="o">=</span> <span class="s2">&quot;postgresql://&lt;user&gt;:&lt;password&gt;@&lt;host&gt;:&lt;port&gt;/&lt;db_name&gt;&quot;</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1"># create vector store client</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">with</span> <span class="n">vecs</span><span class="o">.</span><span class="n">create_client</span><span class="p">(</span><span class="n">DB_CONNECTION</span><span class="p">)</span> <span class="k">as</span> <span class="n">vx</span><span class="p">:</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="c1"># do some work here</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="k">pass</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="c1"># connections are now closed</span>
+</span></code></pre></div>
+<h2 id="adapters">Adapters</h2>
+<p>Adapters are an optional feature to transform data before adding to or querying from a collection. Adapters make it possible to interact with a collection using only your project's native data type (eg. just raw text), rather than manually handling vectors.</p>
+<p>For a complete list of available adapters, see <a href="../concepts_adapters/#built-in-adapters">built-in adapters</a>.</p>
+<p>As an example, we'll create a collection with an adapter that chunks text into paragraphs and converts each chunk into an embedding vector using the <code>all-Mini-LM6-v2</code> model.</p>
+<p>First, install <code>vecs</code> with optional dependencies for text embeddings:
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;vecs[text_embedding]&quot;</span>
+</span></code></pre></div></p>
+<p>Then create a collection with an adapter to chunk text into paragraphs and embed each paragraph using the <code>all-Mini-LM6-v2</code> 384 dimensional text embedding model.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">import</span> <span class="nn">vecs</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kn">from</span> <span class="nn">vecs.adapter</span> <span class="kn">import</span> <span class="n">Adapter</span><span class="p">,</span> <span class="n">ParagraphChunker</span><span class="p">,</span> <span class="n">TextEmbedding</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1"># create vector store client</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="n">vx</span> <span class="o">=</span> <span class="n">vecs</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="s2">&quot;postgresql://&lt;user&gt;:&lt;password&gt;@&lt;host&gt;:&lt;port&gt;/&lt;db_name&gt;&quot;</span><span class="p">)</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="c1"># create a collection with an adapter</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="n">docs</span> <span class="o">=</span> <span class="n">vx</span><span class="o">.</span><span class="n">get_or_create_collection</span><span class="p">(</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;docs&quot;</span><span class="p">,</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">Adapter</span><span class="p">(</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>        <span class="p">[</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>            <span class="n">ParagraphChunker</span><span class="p">(</span><span class="n">skip_during_query</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>            <span class="n">TextEmbedding</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;all-Mini-LM6-v2&#39;</span><span class="p">),</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>        <span class="p">]</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>    <span class="p">)</span>
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>With the adapter registered against the collection, we can upsert records into the collection passing in text rather than vectors.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># add records to the collection using text as the media type</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">docs</span><span class="o">.</span><span class="n">upsert</span><span class="p">(</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="n">records</span><span class="o">=</span><span class="p">[</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>        <span class="p">(</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>         <span class="s2">&quot;vec0&quot;</span><span class="p">,</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>         <span class="s2">&quot;four score and ....&quot;</span><span class="p">,</span> <span class="c1"># &lt;- note that we can now pass text here</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>         <span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">1973</span><span class="p">}</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>        <span class="p">),</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>        <span class="p">(</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>         <span class="s2">&quot;vec1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>         <span class="s2">&quot;hello, world!&quot;</span><span class="p">,</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>         <span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="s2">&quot;2012&quot;</span><span class="p">}</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>        <span class="p">)</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>    <span class="p">]</span>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Similarly, we can query the collection using text.
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># search by text</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">docs</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
+</span></code></pre></div></p>
+<hr />
+<h2 id="deprecated">Deprecated</h2>
+<h3 id="create-collection">Create collection</h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Deprecated: use <a href="#get-or-create-a-collection">get_or_create_collection</a></p>
+</div>
+<p>You can create a collection to store vectors specifying the collections name and the number of dimensions in the vectors you intend to store.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">docs</span> <span class="o">=</span> <span class="n">vx</span><span class="o">.</span><span class="n">create_collection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;docs&quot;</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="get-an-existing-collection">Get an existing collection</h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Deprecated: use <a href="#get-or-create-a-collection">get_or_create_collection</a></p>
+</div>
+<p>To access a previously created collection, use <code>get_collection</code> to retrieve it by name</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">docs</span> <span class="o">=</span> <span class="n">vx</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;docs&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 
 

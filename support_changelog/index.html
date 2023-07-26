@@ -339,6 +339,20 @@
   
   
     <li class="md-nav__item">
+      <a href="../concepts_adapters/" class="md-nav__link">
+        Adapters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../concepts_indexes/" class="md-nav__link">
         Indexes
       </a>
@@ -516,6 +530,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#master" class="md-nav__link">
+    master
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -571,6 +592,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#master" class="md-nav__link">
+    master
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -591,13 +619,22 @@
 
 <h1 id="changelog">Changelog</h1>
 <h2 id="010">0.1.0</h2>
-<p>Initial release</p>
+<ul>
+<li>Initial release</li>
+</ul>
 <h2 id="027">0.2.7</h2>
 <ul>
-<li>Added <code>vecs.Collection.disconnect()</code> to drop database connection</li>
-<li><code>vecs.Client</code> can be used as a context maanger to auto-close connections</li>
-<li>Added docstrings to all methods, functions and modules</li>
-<li>Uses (indexed) containment operator <code>@&gt;</code> for metadata equality filters where possible</li>
+<li>Feature: Added <code>vecs.Collection.disconnect()</code> to drop database connection</li>
+<li>Feature: <code>vecs.Client</code> can be used as a context maanger to auto-close connections</li>
+<li>Feature: Uses (indexed) containment operator <code>@&gt;</code> for metadata equality filters where possible</li>
+<li>Docs: Added docstrings to all methods, functions and modules</li>
+</ul>
+<h2 id="master">master</h2>
+<ul>
+<li>Feature: Collections can have <code>adapters</code> allowing upserting/querying by native media t types</li>
+<li>Breaking Change: Renamed argument <code>Collection.upsert(vectors, ...)</code> to <code>Collection.upsert(records, ...)</code> in support of adapters</li>
+<li>Breaking Change: Renamed argument <code>Collection.query(query_vector, ...)</code> to <code>Collection.query(data, ...)</code> in support of adapters</li>
+<li>Added</li>
 </ul>
 
 
