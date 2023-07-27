@@ -923,11 +923,11 @@ that incldues the <code>IndexMeasure</code> you should index.</p>
 <h2 id="adapters">Adapters</h2>
 <p>Adapters are an optional feature to transform data before adding to or querying from a collection. Adapters make it possible to interact with a collection using only your project's native data type (eg. just raw text), rather than manually handling vectors.</p>
 <p>For a complete list of available adapters, see <a href="../concepts_adapters/#built-in-adapters">built-in adapters</a>.</p>
-<p>As an example, we'll create a collection with an adapter that chunks text into paragraphs and converts each chunk into an embedding vector using the <code>all-Mini-LM6-v2</code> model.</p>
+<p>As an example, we'll create a collection with an adapter that chunks text into paragraphs and converts each chunk into an embedding vector using the <code>all-MiniLM-L6-v2</code> model.</p>
 <p>First, install <code>vecs</code> with optional dependencies for text embeddings:
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;vecs[text_embedding]&quot;</span>
 </span></code></pre></div></p>
-<p>Then create a collection with an adapter to chunk text into paragraphs and embed each paragraph using the <code>all-Mini-LM6-v2</code> 384 dimensional text embedding model.</p>
+<p>Then create a collection with an adapter to chunk text into paragraphs and embed each paragraph using the <code>all-MiniLM-L6-v2</code> 384 dimensional text embedding model.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">import</span> <span class="nn">vecs</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kn">from</span> <span class="nn">vecs.adapter</span> <span class="kn">import</span> <span class="n">Adapter</span><span class="p">,</span> <span class="n">ParagraphChunker</span><span class="p">,</span> <span class="n">TextEmbedding</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
@@ -940,7 +940,7 @@ that incldues the <code>IndexMeasure</code> you should index.</p>
 </span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">Adapter</span><span class="p">(</span>
 </span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>        <span class="p">[</span>
 </span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>            <span class="n">ParagraphChunker</span><span class="p">(</span><span class="n">skip_during_query</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>            <span class="n">TextEmbedding</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;all-Mini-LM6-v2&#39;</span><span class="p">),</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>            <span class="n">TextEmbedding</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;all-MiniLM-L6-v2&#39;</span><span class="p">),</span>
 </span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>        <span class="p">]</span>
 </span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>    <span class="p">)</span>
 </span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="p">)</span>
