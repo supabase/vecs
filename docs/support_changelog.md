@@ -12,9 +12,10 @@
 - Feature: Uses (indexed) containment operator `@>` for metadata equality filters where possible
 - Docs: Added docstrings to all methods, functions and modules
 
-## master
+## 0.3.0
 
 - Feature: Collections can have `adapters` allowing upserting/querying by native media t types
 - Breaking Change: Renamed argument `Collection.upsert(vectors, ...)` to `Collection.upsert(records, ...)` in support of adapters
 - Breaking Change: Renamed argument `Collection.query(query_vector, ...)` to `Collection.query(data, ...)` in support of adapters
-- Added
+
+## master
