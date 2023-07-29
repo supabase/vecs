@@ -5,6 +5,7 @@ import pytest
 
 import vecs
 from vecs.adapter import Adapter, AdapterContext, AdapterStep
+from vecs.adapter.markdown import MarkdownChunker
 from vecs.adapter.noop import NoOp
 from vecs.adapter.text import ParagraphChunker, TextEmbedding
 from vecs.exc import ArgError, MismatchedDimension
@@ -156,3 +157,137 @@ def test_text_integration_adapter(client: vecs.Client) -> None:
     with pytest.raises(ArgError):
         # if the cardinality changes due to adapter pre-processing, raise an error
         docs.query(data="I split \n\n into multiple records \n\n not good")
+
+
+def test_markdown_chunker_normal_headings() -> None:
+    chunker = MarkdownChunker(skip_during_query=True)
+    res = [
+        x
+        for x in chunker(
+            [
+                (
+                    "1",
+                    "# heading 1\n## heading 2\n### heading 3\n#### heading 4\n##### heading 5\n###### heading 6",
+                    {},
+                )
+            ],
+            AdapterContext("upsert"),
+            max_tokens=30,
+        )
+    ]
+    print(res)
+    assert res == [
+        ("1_head_000", "# heading 1", {}),
+        ("1_head_001", "## heading 2", {}),
+        ("1_head_002", "### heading 3", {}),
+        ("1_head_003", "#### heading 4", {}),
+        ("1_head_004", "##### heading 5", {}),
+        ("1_head_005", "###### heading 6", {}),
+    ]
+
+
+def test_markdown_chunker_double_line_headings() -> None:
+    chunker = MarkdownChunker(skip_during_query=True)
+    res = [
+        x
+        for x in chunker(
+            [("1", "heading 1\n===\nheading 2\n---", {})],
+            AdapterContext("upsert"),
+            max_tokens=30,
+        )
+    ]
+    print(res)
+    assert res == [
+        ("1_head_000", "heading 1\n===", {}),
+        ("1_head_001", "heading 2\n---", {}),
+    ]
+
+
+def test_invalid_headings() -> None:
+    # these should all clump into one chunk since none of them are valid headings
+
+    chunker = MarkdownChunker(skip_during_query=True)
+    res = [
+        x
+        for x in chunker(
+            [
+                (
+                    "1",
+                    "#heading 1\n####### heading 2\nheading ???\n-=-===\n#!## heading !3",
+                    {},
+                )
+            ],
+            AdapterContext("upsert"),
+            max_tokens=30,
+        )
+    ]
+    print(res)
+    assert res == [
+        (
+            "1_head_000",
+            "#heading 1\n####### heading 2\nheading ???\n-=-===\n#!## heading !3",
+            {},
+        ),
+    ]
+
+
+def test_max_tokens() -> None:
+    # when a line is too long to fit in one chunk, split it by full stop where possible otherwise wherever possible
+    chunker = MarkdownChunker(skip_during_query=True)
+    res = [
+        x
+        for x in chunker(
+            [
+                (
+                    "1",
+                    "this is one six word sentence. this is a 9 word sentence, which is longer",
+                    {},
+                )
+            ],
+            AdapterContext("upsert"),
+            max_tokens=10,
+        )
+    ]
+    assert res == [
+        ("1_head_000", "this is one six word sentence.", {}),
+        ("1_head_001", "this is a 9 word sentence, which is longer", {}),
+    ]
+
+    res = [
+        x
+        for x in chunker(
+            [
+                (
+                    "2",
+                    "we have no full stop in a good place but the sentence is still too long.",
+                    {},
+                )
+            ],
+            AdapterContext("upsert"),
+            max_tokens=10,
+        )
+    ]
+    assert res == [
+        ("2_head_000", "we have no full stop in a good place but ", {}),
+        ("2_head_001", "the sentence is still too long.", {}),
+    ]
+
+    res = [
+        x
+        for x in chunker(
+            [
+                (
+                    "3",
+                    "this sentence is so long that it won't even fit in two chunks, it'll have to go into three chunks which is exciting",
+                    {},
+                )
+            ],
+            AdapterContext("upsert"),
+            max_tokens=10,
+        )
+    ]
+    assert res == [
+        ("3_head_000", "this sentence is so long that it won't even fit ", {}),
+        ("3_head_001", "in two chunks, it'll have to go into three chunks ", {}),
+        ("3_head_002", "which is exciting", {}),
+    ]
