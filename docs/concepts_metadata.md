@@ -32,6 +32,7 @@ Comparison operators compare a provided value with a value stored in metadata fi
 | $gte      | Matches values that are greater than or equal to a specified value |
 | $lt       | Matches values that are less than a specified value |
 | $lte      | Matches values that are less than or equal to a specified value |
+| $in       | Matches values that are contained by scalar list of specified value |
 
 
 ### Logical Operators
@@ -84,5 +85,15 @@ Those variants are most consistently able to make use of indexes.
         {"last_name": {"$lt": "Brown"}},
         {"is_priority_customer": {"$gte": 5000.00}}
     ]
+}
+```
+
+---
+
+`priority` contained by ["enterprise", "pro"]
+
+```json
+{
+    "priority": {"$in": ["enterprise", "pro"]}
 }
 ```
