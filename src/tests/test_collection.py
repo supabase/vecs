@@ -512,6 +512,48 @@ def test_filters_eq(client: vecs.Client) -> None:
     ) == ["6"]
 
 
+def test_filters_in(client: vecs.Client) -> None:
+    bar = client.get_or_create_collection(name="bar", dimension=4)
+
+    records = [
+        ("0", [0, 0, 0, 0], {"a": 1, "b": 2}),
+        ("1", [1, 0, 0, 0], {"a": [1, 2, 3]}),
+        ("2", [1, 1, 0, 0], {"a": {"1": "2"}}),
+        ("3", [0, 0, 0, 0], {"a": "1"}),
+    ]
+
+    bar.upsert(records)
+    bar.create_index()
+
+    # int value of "a" is contained by [1, 2]
+    assert bar.query(
+        data=[0, 0, 0, 0],
+        limit=3,
+        filters={"a": {"$in": [1, 2]}},
+    ) == ["0"]
+
+    # str value of "a" is contained by ["1", "2"]
+    assert bar.query(
+        data=[0, 0, 0, 0],
+        limit=3,
+        filters={"a": {"$in": ["1", "2"]}},
+    ) == ["3"]
+
+    with pytest.raises(vecs.exc.FilterError):
+        bar.query(
+            data=[0, 0, 0, 0],
+            limit=3,
+            filters={"a": {"$in": 1}},  # error, value should be a list
+        )
+
+    with pytest.raises(vecs.exc.FilterError):
+        bar.query(
+            data=[0, 0, 0, 0],
+            limit=3,
+            filters={"a": {"$in": [1, [2]]}},  # error, element must be scalar
+        )
+
+
 def test_access_index(client: vecs.Client) -> None:
     dim = 4
     bar = client.get_or_create_collection(name="bar", dimension=dim)

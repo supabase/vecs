@@ -19,3 +19,5 @@
 - Breaking Change: Renamed argument `Collection.query(query_vector, ...)` to `Collection.query(data, ...)` in support of adapters
 
 ## master
+
+- Feature: Metadata filtering with `$in`

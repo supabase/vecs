@@ -298,7 +298,9 @@ class Collection:
                             vec=stmt.excluded.vec, metadata=stmt.excluded.metadata
                         ),
                     )
+                    print("exec start", flush=True)
                     sess.execute(stmt)
+                    print("exec stop", flush=True)
         return None
 
     def fetch(self, ids: Iterable[str]) -> List[Record]:
@@ -749,7 +751,7 @@ def build_filters(json_col: Column, filters: Dict):
             if len(value) > 1:
                 raise FilterError("only one operator permitted")
             for operator, clause in value.items():
-                if operator not in ("$eq", "$ne", "$lt", "$lte", "$gt", "$gte"):
+                if operator not in ("$eq", "$ne", "$lt", "$lte", "$gt", "$gte", "$in"):
                     raise FilterError("unknown operator")
 
                 # equality of singular values can take advantage of the metadata index
@@ -758,6 +760,21 @@ def build_filters(json_col: Column, filters: Dict):
                 if operator == "$eq" and not hasattr(clause, "__len__"):
                     contains_value = cast({key: clause}, postgresql.JSONB)
                     return json_col.op("@>")(contains_value)
+
+                if operator == "$in":
+                    if not isinstance(clause, list):
+                        raise FilterError("argument to $in filter must be a list")
+
+                    for elem in clause:
+                        if not isinstance(elem, (int, str, float)):
+                            raise FilterError(
+                                "argument to $in filter must be a list or scalars"
+                            )
+
+                    # cast the array of scalars to a postgres array of jsonb so we can
+                    # directly compare json types in the query
+                    contains_value = [cast(elem, postgresql.JSONB) for elem in clause]
+                    return json_col.op("->")(key).in_(contains_value)
 
                 matches_value = cast(clause, postgresql.JSONB)
 
@@ -779,6 +796,7 @@ def build_filters(json_col: Column, filters: Dict):
 
                 elif operator == "$gte":
                     return json_col.op("->")(key) >= matches_value
+
                 else:
                     raise Unreachable()
 
