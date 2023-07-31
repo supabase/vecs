@@ -5,14 +5,14 @@ Adapters are an optional feature to transform data before adding to or querying 
 Additionally, adapter transformations are applied lazily and can internally batch operations which can make them more memory and CPU efficient compared to manually executing transforms.
 
 ## Example:
-As an example, we'll create a collection with an adapter that chunks text into paragraphs and converts each chunk into an embedding vector using the `all-Mini-LM6-v2` model.
+As an example, we'll create a collection with an adapter that chunks text into paragraphs and converts each chunk into an embedding vector using the `all-MiniLM-L6-v2` model.
 
 First, install `vecs` with optional dependencies for text embeddings:
 ```sh
 pip install "vecs[text_embedding]"
 ```
 
-Then create a collection with an adapter to chunk text into paragraphs and embed each paragraph using the `all-Mini-LM6-v2` 384 dimensional text embedding model.
+Then create a collection with an adapter to chunk text into paragraphs and embed each paragraph using the `all-MiniLM-L6-v2` 384 dimensional text embedding model.
 
 ```python
 import vecs
@@ -27,7 +27,7 @@ docs = vx.get_or_create_collection(
     adapter=Adapter(
         [
             ParagraphChunker(skip_during_query=True),
-            TextEmbedding(model='all-Mini-LM6-v2'),
+            TextEmbedding(model='all-MiniLM-L6-v2'),
         ]
     )
 )
@@ -111,7 +111,7 @@ vx.get_or_create_collection(
     name="docs",
     adapter=Adapter(
         [
-            TextEmbedding(model='all-Mini-LM6-v2')
+            TextEmbedding(model='all-MiniLM-L6-v2')
         ]
     )
 )
