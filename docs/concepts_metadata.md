@@ -32,7 +32,7 @@ Comparison operators compare a provided value with a value stored in metadata fi
 | $gte      | Matches values that are greater than or equal to a specified value |
 | $lt       | Matches values that are less than a specified value |
 | $lte      | Matches values that are less than or equal to a specified value |
-| $in       | Matches values that are contained by scalar list of specified value |
+| $in       | Matches values that are contained by scalar list of specified values |
 
 
 ### Logical Operators
