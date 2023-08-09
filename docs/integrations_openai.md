@@ -40,7 +40,7 @@ for sentence in dataset:
         model="text-embedding-ada-002",
         input=[sentence]
     )
-    embeddings.append((sentence, response["data"][0]["embedding"]))
+    embeddings.append((sentence, response["data"][0]["embedding"], {}))
 ```
 
 ### Store the Embeddings with vecs
