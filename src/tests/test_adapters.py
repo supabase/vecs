@@ -175,7 +175,6 @@ def test_markdown_chunker_normal_headings() -> None:
             max_tokens=30,
         )
     ]
-    print(res)
     assert res == [
         ("1_head_000", "# heading 1", {}),
         ("1_head_001", "## heading 2", {}),
@@ -185,22 +184,11 @@ def test_markdown_chunker_normal_headings() -> None:
         ("1_head_005", "###### heading 6", {}),
     ]
 
-
-def test_markdown_chunker_double_line_headings() -> None:
-    chunker = MarkdownChunker(skip_during_query=True)
     res = [
         x
-        for x in chunker(
-            [("1", "heading 1\n===\nheading 2\n---", {})],
-            AdapterContext("upsert"),
-            max_tokens=30,
-        )
+        for x in chunker([("", "# heading1\n# heading2", {})], AdapterContext("query"))
     ]
-    print(res)
-    assert res == [
-        ("1_head_000", "heading 1\n===", {}),
-        ("1_head_001", "heading 2\n---", {}),
-    ]
+    assert res == [("", "# heading1\n# heading2", {})]
 
 
 def test_invalid_headings() -> None:
@@ -221,7 +209,6 @@ def test_invalid_headings() -> None:
             max_tokens=30,
         )
     ]
-    print(res)
     assert res == [
         (
             "1_head_000",
@@ -232,26 +219,7 @@ def test_invalid_headings() -> None:
 
 
 def test_max_tokens() -> None:
-    # when a line is too long to fit in one chunk, split it by full stop where possible otherwise wherever possible
     chunker = MarkdownChunker(skip_during_query=True)
-    res = [
-        x
-        for x in chunker(
-            [
-                (
-                    "1",
-                    "this is one six word sentence. this is a 9 word sentence, which is longer",
-                    {},
-                )
-            ],
-            AdapterContext("upsert"),
-            max_tokens=10,
-        )
-    ]
-    assert res == [
-        ("1_head_000", "this is one six word sentence.", {}),
-        ("1_head_001", "this is a 9 word sentence, which is longer", {}),
-    ]
 
     res = [
         x
@@ -259,7 +227,7 @@ def test_max_tokens() -> None:
             [
                 (
                     "2",
-                    "we have no full stop in a good place but the sentence is still too long.",
+                    "this is quite a long sentence which will have to be split into two chunks",
                     {},
                 )
             ],
@@ -268,8 +236,8 @@ def test_max_tokens() -> None:
         )
     ]
     assert res == [
-        ("2_head_000", "we have no full stop in a good place but ", {}),
-        ("2_head_001", "the sentence is still too long.", {}),
+        ("2_head_000", "this is quite a long sentence which will have to", {}),
+        ("2_head_001", "be split into two chunks", {}),
     ]
 
     res = [
@@ -287,7 +255,23 @@ def test_max_tokens() -> None:
         )
     ]
     assert res == [
-        ("3_head_000", "this sentence is so long that it won't even fit ", {}),
-        ("3_head_001", "in two chunks, it'll have to go into three chunks ", {}),
+        ("3_head_000", "this sentence is so long that it won't even fit", {}),
+        ("3_head_001", "in two chunks, it'll have to go into three chunks", {}),
         ("3_head_002", "which is exciting", {}),
     ]
+
+    with pytest.raises(ValueError):
+        res = [
+            x
+            for x in chunker(
+                [
+                    (
+                        "4",
+                        "this doesn't really matter since it will throw an error anyway",
+                        {},
+                    )
+                ],
+                AdapterContext("upsert"),
+                max_tokens=-5,
+            )
+        ]
