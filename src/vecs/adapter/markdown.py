@@ -23,7 +23,15 @@ class MarkdownChunker(AdapterStep):
     @staticmethod
     def split_by_heading(md: str, max_tokens: int) -> List[str]:
         regex_split: Literal["^(#{1,6}+\\s+.+)$"] = r"^(#{1,6}+\s+.+)$"
-        sections: list[str | Any] = re.split(regex_split, md, flags=re.MULTILINE)
+        headings = [
+            match.span()[0]
+            for match in re.finditer(regex_split, md, flags=re.MULTILINE)
+        ]
+
+        if headings == [] or headings[0] != 0:
+            headings.insert(0, 0)
+
+        sections = [md[i:j] for i, j in zip(headings, headings[1:] + [None])]
 
         for section in sections:
             chunks = flu(section.split(" ")).chunk(max_tokens)
@@ -33,8 +41,6 @@ class MarkdownChunker(AdapterStep):
             joined_chunks = filter(
                 is_not_useless_chunk, [" ".join(chunk) for chunk in chunks]
             )
-
-            # print(list(joined_chunks))
 
             for joined_chunk in joined_chunks:
                 yield joined_chunk

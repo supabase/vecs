@@ -167,7 +167,7 @@ def test_markdown_chunker_normal_headings() -> None:
             [
                 (
                     "1",
-                    "# heading 1\n## heading 2\n### heading 3\n#### heading 4\n##### heading 5\n###### heading 6",
+                    "# heading 1\n## heading 2\n### heading 3\n#### heading 4\nwith some text\n##### heading 5\n###### heading 6",
                     {},
                 )
             ],
@@ -176,11 +176,11 @@ def test_markdown_chunker_normal_headings() -> None:
         )
     ]
     assert res == [
-        ("1_head_000", "# heading 1", {}),
-        ("1_head_001", "## heading 2", {}),
-        ("1_head_002", "### heading 3", {}),
-        ("1_head_003", "#### heading 4", {}),
-        ("1_head_004", "##### heading 5", {}),
+        ("1_head_000", "# heading 1\n", {}),
+        ("1_head_001", "## heading 2\n", {}),
+        ("1_head_002", "### heading 3\n", {}),
+        ("1_head_003", "#### heading 4\nwith some text\n", {}),
+        ("1_head_004", "##### heading 5\n", {}),
         ("1_head_005", "###### heading 6", {}),
     ]
 
