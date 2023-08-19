@@ -22,7 +22,7 @@ class MarkdownChunker(AdapterStep):
 
     @staticmethod
     def split_by_heading(md: str, max_tokens: int) -> List[str]:
-        regex_split: Literal["^(#{1,6}+\\s+.+)$"] = r"^(#{1,6}+\s+.+)$"
+        regex_split: Literal["^(#{1,6}+\s+.+)$"] = r"^(#{1,6}+\s+.+)$"
         headings = [
             match.span()[0]
             for match in re.finditer(regex_split, md, flags=re.MULTILINE)
