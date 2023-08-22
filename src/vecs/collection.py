@@ -421,7 +421,9 @@ class Collection:
 
         if not self.is_indexed_for_measure(imeasure):
             warnings.warn(
-                f"Query does not have a covering index for {imeasure}. See Collection.create_index"
+                UserWarning(
+                    f"Query does not have a covering index for {imeasure}. See Collection.create_index"
+                )
             )
 
         if skip_adapter:

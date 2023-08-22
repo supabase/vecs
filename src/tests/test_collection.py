@@ -586,7 +586,7 @@ def test_mismatch_measure(client: vecs.Client) -> None:
     bar = client.get_or_create_collection(name="bar", dimension=dim)
     bar.upsert([("a", [1, 2, 3, 4], {})])
     bar.create_index(measure=vecs.IndexMeasure.max_inner_product)
-    with pytest.warns():
+    with pytest.warns(UserWarning):
         results = bar.query(
             data=[1, 2, 3, 4],
             limit=1,

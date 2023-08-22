@@ -1,5 +1,5 @@
 import re
-from typing import Any, Dict, Generator, Iterable, List, Literal, Optional, Tuple
+from typing import Any, Dict, Generator, Iterable, Optional, Tuple
 
 from flupy import flu
 
@@ -21,8 +21,8 @@ class MarkdownChunker(AdapterStep):
         self.skip_during_query = skip_during_query
 
     @staticmethod
-    def split_by_heading(md: str, max_tokens: int) -> List[str]:
-        regex_split: Literal["^(#{1,6}+\s+.+)$"] = r"^(#{1,6}+\s+.+)$"
+    def split_by_heading(md: str, max_tokens: int) -> Generator[str, None, None]:
+        regex_split = r"^(#{1,6}\s+.+)$"
         headings = [
             match.span()[0]
             for match in re.finditer(regex_split, md, flags=re.MULTILINE)
