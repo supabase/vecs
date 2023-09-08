@@ -18,6 +18,8 @@
 - Breaking Change: Renamed argument `Collection.upsert(vectors, ...)` to `Collection.upsert(records, ...)` in support of adapters
 - Breaking Change: Renamed argument `Collection.query(query_vector, ...)` to `Collection.query(data, ...)` in support of adapters
 
-## master
+## 0.3.1
 
 - Feature: Metadata filtering with `$in`
+
+## master
