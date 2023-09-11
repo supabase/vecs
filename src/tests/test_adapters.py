@@ -5,6 +5,7 @@ import pytest
 
 import vecs
 from vecs.adapter import Adapter, AdapterContext, AdapterStep
+from vecs.adapter.markdown import MarkdownChunker
 from vecs.adapter.noop import NoOp
 from vecs.adapter.text import ParagraphChunker, TextEmbedding
 from vecs.exc import ArgError, MismatchedDimension
@@ -156,3 +157,121 @@ def test_text_integration_adapter(client: vecs.Client) -> None:
     with pytest.raises(ArgError):
         # if the cardinality changes due to adapter pre-processing, raise an error
         docs.query(data="I split \n\n into multiple records \n\n not good")
+
+
+def test_markdown_chunker_normal_headings() -> None:
+    chunker = MarkdownChunker(skip_during_query=True)
+    res = [
+        x
+        for x in chunker(
+            [
+                (
+                    "1",
+                    "# heading 1\n## heading 2\n### heading 3\n#### heading 4\nwith some text\n##### heading 5\n###### heading 6",
+                    {"some": 1},
+                )
+            ],
+            AdapterContext("upsert"),
+            max_tokens=30,
+        )
+    ]
+    assert res == [
+        ("1_head_000", "# heading 1\n", {"some": 1}),
+        ("1_head_001", "## heading 2\n", {"some": 1}),
+        ("1_head_002", "### heading 3\n", {"some": 1}),
+        ("1_head_003", "#### heading 4\nwith some text\n", {"some": 1}),
+        ("1_head_004", "##### heading 5\n", {"some": 1}),
+        ("1_head_005", "###### heading 6", {"some": 1}),
+    ]
+
+    res = [
+        x
+        for x in chunker([("", "# heading1\n# heading2", {})], AdapterContext("query"))
+    ]
+    assert res == [("", "# heading1\n# heading2", {})]
+
+
+def test_invalid_headings() -> None:
+    # these should all clump into one chunk since none of them are valid headings
+
+    chunker = MarkdownChunker(skip_during_query=True)
+    res = [
+        x
+        for x in chunker(
+            [
+                (
+                    "1",
+                    "#heading 1\n####### heading 2\nheading ???\n-=-===\n#!## heading !3",
+                    {},
+                )
+            ],
+            AdapterContext("upsert"),
+            max_tokens=30,
+        )
+    ]
+    assert res == [
+        (
+            "1_head_000",
+            "#heading 1\n####### heading 2\nheading ???\n-=-===\n#!## heading !3",
+            {},
+        ),
+    ]
+
+
+def test_max_tokens() -> None:
+    chunker = MarkdownChunker(skip_during_query=True)
+
+    res = [
+        x
+        for x in chunker(
+            [
+                (
+                    "2",
+                    "this is quite a long sentence which will have to be split into two chunks",
+                    {},
+                )
+            ],
+            AdapterContext("upsert"),
+            max_tokens=10,
+        )
+    ]
+    assert res == [
+        ("2_head_000", "this is quite a long sentence which will have to", {}),
+        ("2_head_001", "be split into two chunks", {}),
+    ]
+
+    res = [
+        x
+        for x in chunker(
+            [
+                (
+                    "3",
+                    "this sentence is so long that it won't even fit in two chunks, it'll have to go into three chunks which is exciting",
+                    {},
+                )
+            ],
+            AdapterContext("upsert"),
+            max_tokens=10,
+        )
+    ]
+    assert res == [
+        ("3_head_000", "this sentence is so long that it won't even fit", {}),
+        ("3_head_001", "in two chunks, it'll have to go into three chunks", {}),
+        ("3_head_002", "which is exciting", {}),
+    ]
+
+    with pytest.raises(ValueError):
+        res = [
+            x
+            for x in chunker(
+                [
+                    (
+                        "4",
+                        "this doesn't really matter since it will throw an error anyway",
+                        {},
+                    )
+                ],
+                AdapterContext("upsert"),
+                max_tokens=-5,
+            )
+        ]
