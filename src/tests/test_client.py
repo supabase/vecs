@@ -3,6 +3,12 @@ import pytest
 import vecs
 
 
+def test_extracts_vector_version(client: vecs.Client) -> None:
+    # pgvector version is sucessfully extracted
+    assert client.vector_version != ""
+    assert client.vector_version.count(".") >= 2
+
+
 def test_create_collection(client: vecs.Client) -> None:
     with pytest.warns(DeprecationWarning):
         client.create_collection(name="docs", dimension=384)

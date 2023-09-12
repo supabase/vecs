@@ -7,6 +7,7 @@ All public classes, enums, and functions are re-exported by the top level `vecs`
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, List, Optional
 
 from deprecated import deprecated
@@ -65,6 +66,21 @@ class Client:
             with sess.begin():
                 sess.execute(text("create schema if not exists vecs;"))
                 sess.execute(text("create extension if not exists vector;"))
+                self.vector_version: str = sess.execute(
+                    text(
+                        "select installed_version from pg_available_extensions where name = 'vector' limit 1;"
+                    )
+                ).scalar_one()
+
+        if self._supports_hnsw():
+            warnings.warn(
+                UserWarning(
+                    f"vecs will drop support for pgvector < 0.5.0 in version 1.0. Consider updating to latest postgres"
+                )
+            )
+
+    def _supports_hnsw(self):
+        return not self.vector_version.startswith("0.4")
 
     def get_or_create_collection(
         self,

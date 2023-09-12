@@ -57,10 +57,14 @@ class IndexMethod(str, Enum):
     expand in the future.
 
     Attributes:
+        auto (str): Automatically choose the best available index method.
         ivfflat (str): The ivfflat index method.
+        hnsw (str): The hnsw index method.
     """
 
+    auto = "auto"
     ivfflat = "ivfflat"
+    hnsw = "hnsw"
 
 
 class IndexMeasure(str, Enum):
@@ -594,7 +598,7 @@ class Collection:
     def create_index(
         self,
         measure: IndexMeasure = IndexMeasure.cosine_distance,
-        method: IndexMethod = IndexMethod.ivfflat,
+        method: IndexMethod = IndexMethod.auto,
         replace=True,
     ) -> None:
         """
@@ -621,15 +625,27 @@ class Collection:
 
         Args:
             measure (IndexMeasure, optional): The measure to index for. Defaults to 'cosine_distance'.
-            method (IndexMethod, optional): The indexing method to use. Defaults to 'ivfflat'.
+            method (IndexMethod, optional): The indexing method to use. Defaults to 'auto'.
             replace (bool, optional): Whether to replace the existing index. Defaults to True.
 
         Raises:
             ArgError: If an invalid index method is used, or if *replace* is False and an index already exists.
         """
-        if not method == IndexMethod.ivfflat:
-            # at time of writing, no other methods are supported by pgvector
+        if not method in (IndexMethod.ivfflat, IndexMethod.hnsw, IndexMethod.auto):
             raise ArgError("invalid index method")
+
+        if method == IndexMethod.auto:
+            if self.client._supports_hnsw():
+                method = IndexMethod.hnsw
+            else:
+                method = IndexMethod.ivfflat
+
+        if method == IndexMethod.ivfflat:
+            warnings.warn(
+                UserWarning(
+                    f"vecs will drop support for ivfflat indexes in version 1.0. upgrade to pgvector >= 0.5.0 and use IndexMethod.hnsw"
+                )
+            )
 
         if replace:
             self._index = None
@@ -641,70 +657,96 @@ class Collection:
         if ops is None:
             raise ArgError("Unknown index measure")
 
-        # Clone the table
-        clone_table = build_table(f"_{self.name}", self.client.meta, self.dimension)
+        if method == IndexMethod.ivfflat:
+            # Clone the table
+            clone_table = build_table(f"_{self.name}", self.client.meta, self.dimension)
 
-        # hacky
-        try:
-            clone_table.drop(self.client.engine)
-        except Exception:
-            pass
+            # hacky
+            try:
+                clone_table.drop(self.client.engine)
+            except Exception:
+                pass
 
-        with self.client.Session() as sess:
-            n_records: int = sess.execute(func.count(self.table.c.id)).scalar()  # type: ignore
+            with self.client.Session() as sess:
+                n_records: int = sess.execute(func.count(self.table.c.id)).scalar()  # type: ignore
 
-        with self.client.Session() as sess:
-            with sess.begin():
-                n_index_seed = min(5000, n_records)
-                clone_table.create(sess.connection())
-                stmt_seed_table = clone_table.insert().from_select(
-                    self.table.c,
-                    select(self.table).order_by(func.random()).limit(n_index_seed),
-                )
-                sess.execute(stmt_seed_table)
-
-                n_lists = (
-                    int(max(n_records / 1000, 30))
-                    if n_records < 1_000_000
-                    else int(math.sqrt(n_records))
-                )
-
-                unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
-
-                sess.execute(
-                    text(
-                        f"""
-                        create index ix_{ops}_{n_lists}_{unique_string}
-                          on vecs."{clone_table.name}"
-                          using ivfflat (vec {ops}) with (lists={n_lists})
-                        """
+            with self.client.Session() as sess:
+                with sess.begin():
+                    n_index_seed = min(5000, n_records)
+                    clone_table.create(sess.connection())
+                    stmt_seed_table = clone_table.insert().from_select(
+                        self.table.c,
+                        select(self.table).order_by(func.random()).limit(n_index_seed),
                     )
-                )
+                    sess.execute(stmt_seed_table)
 
-                sess.execute(
-                    text(
-                        f"""
-                        create index ix_meta_{unique_string}
-                          on vecs."{clone_table.name}"
-                          using gin ( metadata jsonb_path_ops )
-                        """
+                    n_lists = (
+                        int(max(n_records / 1000, 30))
+                        if n_records < 1_000_000
+                        else int(math.sqrt(n_records))
                     )
-                )
 
-                # Fully populate the table
-                stmt = postgresql.insert(clone_table).from_select(
-                    self.table.c, select(self.table)
-                )
-                stmt = stmt.on_conflict_do_nothing()
-                sess.execute(stmt)
+                    unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
 
-                # Replace the table
-                sess.execute(text(f"drop table vecs.{self.table.name};"))
-                sess.execute(
-                    text(
-                        f"alter table vecs._{self.table.name} rename to {self.table.name};"
+                    sess.execute(
+                        text(
+                            f"""
+                            create index ix_{ops}_{n_lists}_{unique_string}
+                              on vecs."{clone_table.name}"
+                              using ivfflat (vec {ops}) with (lists={n_lists})
+                            """
+                        )
                     )
-                )
+
+                    sess.execute(
+                        text(
+                            f"""
+                            create index ix_meta_{unique_string}
+                              on vecs."{clone_table.name}"
+                              using gin ( metadata jsonb_path_ops )
+                            """
+                        )
+                    )
+
+                    # Fully populate the table
+                    stmt = postgresql.insert(clone_table).from_select(
+                        self.table.c, select(self.table)
+                    )
+                    stmt = stmt.on_conflict_do_nothing()
+                    sess.execute(stmt)
+
+                    # Replace the table
+                    sess.execute(text(f"drop table vecs.{self.table.name};"))
+                    sess.execute(
+                        text(
+                            f"alter table vecs._{self.table.name} rename to {self.table.name};"
+                        )
+                    )
+
+        if method == IndexMethod.hnsw:
+            unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
+            with self.client.Session() as sess:
+                with sess.begin():
+                    sess.execute(
+                        text(
+                            f"""
+                            create index ix_{ops}_{unique_string}
+                              on vecs."{self.table.name}"
+                              using hnsw (vec {ops});
+                            """
+                        )
+                    )
+
+                    sess.execute(
+                        text(
+                            f"""
+                            create index ix_meta_{unique_string}
+                              on vecs."{self.table.name}"
+                              using gin ( metadata jsonb_path_ops )
+                            """
+                        )
+                    )
+
         return None
 
 
