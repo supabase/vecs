@@ -1,8 +1,8 @@
 # Indexes
 
-Indexes are tools for optimizing query performance of a [collection](/vecs/concepts_collections).
+Indexes are tools for optimizing query performance of a [collection](concepts_collections.md).
 
-Collections can be [queried](/vecs/api/#query) without an index, but that will emit a python warning and should never be done in produciton.
+Collections can be [queried](api.md/#query) without an index, but that will emit a python warning and should never be done in produciton.
 
 ```text
 query does not have a covering index for cosine_similarity. See Collection.create_index
