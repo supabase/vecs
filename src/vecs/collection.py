@@ -247,6 +247,18 @@ class Collection:
                 "Collection with requested name already exists"
             )
         self.table.create(self.client.engine)
+
+        unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
+        with self.client.Session() as sess:
+            sess.execute(
+                text(
+                    f"""
+                    create index ix_meta_{unique_string}
+                      on vecs."{self.table.name}"
+                      using gin ( metadata jsonb_path_ops )
+                    """
+                )
+            )
         return self
 
     def _drop(self):
@@ -647,38 +659,23 @@ class Collection:
                 )
             )
 
-        if replace:
-            self._index = None
-        else:
-            if self.index is not None:
-                raise ArgError("replace is set to False but an index exists")
-
         ops = INDEX_MEASURE_TO_OPS.get(measure)
         if ops is None:
             raise ArgError("Unknown index measure")
 
-        if method == IndexMethod.ivfflat:
-            # Clone the table
-            clone_table = build_table(f"_{self.name}", self.client.meta, self.dimension)
+        unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
 
-            # hacky
-            try:
-                clone_table.drop(self.client.engine)
-            except Exception:
-                pass
+        with self.client.Session() as sess:
+            with sess.begin():
+                if self.index is not None:
+                    if replace:
+                        sess.execute(text(f'drop index vecs."{self.index}";'))
+                        self._index = None
+                    else:
+                        raise ArgError("replace is set to False but an index exists")
 
-            with self.client.Session() as sess:
-                n_records: int = sess.execute(func.count(self.table.c.id)).scalar()  # type: ignore
-
-            with self.client.Session() as sess:
-                with sess.begin():
-                    n_index_seed = min(5000, n_records)
-                    clone_table.create(sess.connection())
-                    stmt_seed_table = clone_table.insert().from_select(
-                        self.table.c,
-                        select(self.table).order_by(func.random()).limit(n_index_seed),
-                    )
-                    sess.execute(stmt_seed_table)
+                if method == IndexMethod.ivfflat:
+                    n_records: int = sess.execute(func.count(self.table.c.id)).scalar()  # type: ignore
 
                     n_lists = (
                         int(max(n_records / 1000, 30))
@@ -686,63 +683,23 @@ class Collection:
                         else int(math.sqrt(n_records))
                     )
 
-                    unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
-
                     sess.execute(
                         text(
                             f"""
-                            create index ix_{ops}_{n_lists}_{unique_string}
-                              on vecs."{clone_table.name}"
+                            create index ix_{ops}_ivfflat_{n_lists}_{unique_string}
+                              on vecs."{self.table.name}"
                               using ivfflat (vec {ops}) with (lists={n_lists})
                             """
                         )
                     )
 
+                if method == IndexMethod.hnsw:
                     sess.execute(
                         text(
                             f"""
-                            create index ix_meta_{unique_string}
-                              on vecs."{clone_table.name}"
-                              using gin ( metadata jsonb_path_ops )
-                            """
-                        )
-                    )
-
-                    # Fully populate the table
-                    stmt = postgresql.insert(clone_table).from_select(
-                        self.table.c, select(self.table)
-                    )
-                    stmt = stmt.on_conflict_do_nothing()
-                    sess.execute(stmt)
-
-                    # Replace the table
-                    sess.execute(text(f"drop table vecs.{self.table.name};"))
-                    sess.execute(
-                        text(
-                            f"alter table vecs._{self.table.name} rename to {self.table.name};"
-                        )
-                    )
-
-        if method == IndexMethod.hnsw:
-            unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
-            with self.client.Session() as sess:
-                with sess.begin():
-                    sess.execute(
-                        text(
-                            f"""
-                            create index ix_{ops}_{unique_string}
+                            create index ix_{ops}_hnsw_{unique_string}
                               on vecs."{self.table.name}"
                               using hnsw (vec {ops});
-                            """
-                        )
-                    )
-
-                    sess.execute(
-                        text(
-                            f"""
-                            create index ix_meta_{unique_string}
-                              on vecs."{self.table.name}"
-                              using gin ( metadata jsonb_path_ops )
                             """
                         )
                     )
