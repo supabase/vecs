@@ -72,7 +72,7 @@ class Client:
                     )
                 ).scalar_one()
 
-        if self._supports_hnsw():
+        if not self._supports_hnsw():
             warnings.warn(
                 UserWarning(
                     f"vecs will drop support for pgvector < 0.5.0 in version 1.0. Consider updating to latest postgres"
