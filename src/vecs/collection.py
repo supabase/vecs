@@ -57,10 +57,14 @@ class IndexMethod(str, Enum):
     expand in the future.
 
     Attributes:
+        auto (str): Automatically choose the best available index method.
         ivfflat (str): The ivfflat index method.
+        hnsw (str): The hnsw index method.
     """
 
+    auto = "auto"
     ivfflat = "ivfflat"
+    hnsw = "hnsw"
 
 
 class IndexMeasure(str, Enum):
@@ -243,6 +247,18 @@ class Collection:
                 "Collection with requested name already exists"
             )
         self.table.create(self.client.engine)
+
+        unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
+        with self.client.Session() as sess:
+            sess.execute(
+                text(
+                    f"""
+                    create index ix_meta_{unique_string}
+                      on vecs."{self.table.name}"
+                      using gin ( metadata jsonb_path_ops )
+                    """
+                )
+            )
         return self
 
     def _drop(self):
@@ -383,6 +399,7 @@ class Collection:
         include_metadata: bool = False,
         *,
         probes: Optional[int] = None,
+        ef_search: Optional[int] = None,
         skip_adapter: bool = False,
     ) -> Union[List[Record], List[str]]:
         """
@@ -398,6 +415,8 @@ class Collection:
             include_value (bool, optional): Whether to include the distance value in the results. Defaults to False.
             include_metadata (bool, optional): Whether to include the metadata in the results. Defaults to False.
             probes (Optional[Int], optional): Number of ivfflat index lists to query. Higher increases accuracy but decreases speed
+            ef_search (Optional[Int], optional): Size of the dynamic candidate list for HNSW index search. Higher increases accuracy but decreases speed
+            skip_adapter (bool, optional): When True, skips any associated adapter and queries using a literal vector provided to *data*
 
         Returns:
             Union[List[Record], List[str]]: The result of the similarity search.
@@ -405,6 +424,9 @@ class Collection:
 
         if probes is None:
             probes = 10
+
+        if ef_search is None:
+            ef_search = 40
 
         if not isinstance(probes, int):
             raise ArgError("probes must be an integer")
@@ -472,6 +494,12 @@ class Collection:
                 sess.execute(
                     text("set local ivfflat.probes = :probes").bindparams(probes=probes)
                 )
+                if self.client._supports_hnsw():
+                    sess.execute(
+                        text("set local hnsw.ef_search = :ef_search").bindparams(
+                            ef_search=ef_search
+                        )
+                    )
                 if len(cols) == 1:
                     return [str(x) for x in sess.scalars(stmt).fetchall()]
                 return sess.execute(stmt).fetchall() or []
@@ -594,7 +622,7 @@ class Collection:
     def create_index(
         self,
         measure: IndexMeasure = IndexMeasure.cosine_distance,
-        method: IndexMethod = IndexMethod.ivfflat,
+        method: IndexMethod = IndexMethod.auto,
         replace=True,
     ) -> None:
         """
@@ -621,90 +649,71 @@ class Collection:
 
         Args:
             measure (IndexMeasure, optional): The measure to index for. Defaults to 'cosine_distance'.
-            method (IndexMethod, optional): The indexing method to use. Defaults to 'ivfflat'.
+            method (IndexMethod, optional): The indexing method to use. Defaults to 'auto'.
             replace (bool, optional): Whether to replace the existing index. Defaults to True.
 
         Raises:
             ArgError: If an invalid index method is used, or if *replace* is False and an index already exists.
         """
-        if not method == IndexMethod.ivfflat:
-            # at time of writing, no other methods are supported by pgvector
+        if not method in (IndexMethod.ivfflat, IndexMethod.hnsw, IndexMethod.auto):
             raise ArgError("invalid index method")
 
-        if replace:
-            self._index = None
-        else:
-            if self.index is not None:
-                raise ArgError("replace is set to False but an index exists")
+        if method == IndexMethod.auto:
+            if self.client._supports_hnsw():
+                method = IndexMethod.hnsw
+            else:
+                method = IndexMethod.ivfflat
+
+        if method == IndexMethod.hnsw and not self.client._supports_hnsw():
+            raise ArgError(
+                "HNSW Unavailable. Upgrade your pgvector installation to > 0.5.0 to enable HNSW support"
+            )
 
         ops = INDEX_MEASURE_TO_OPS.get(measure)
         if ops is None:
             raise ArgError("Unknown index measure")
 
-        # Clone the table
-        clone_table = build_table(f"_{self.name}", self.client.meta, self.dimension)
-
-        # hacky
-        try:
-            clone_table.drop(self.client.engine)
-        except Exception:
-            pass
-
-        with self.client.Session() as sess:
-            n_records: int = sess.execute(func.count(self.table.c.id)).scalar()  # type: ignore
+        unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
 
         with self.client.Session() as sess:
             with sess.begin():
-                n_index_seed = min(5000, n_records)
-                clone_table.create(sess.connection())
-                stmt_seed_table = clone_table.insert().from_select(
-                    self.table.c,
-                    select(self.table).order_by(func.random()).limit(n_index_seed),
-                )
-                sess.execute(stmt_seed_table)
+                if self.index is not None:
+                    if replace:
+                        sess.execute(text(f'drop index vecs."{self.index}";'))
+                        self._index = None
+                    else:
+                        raise ArgError("replace is set to False but an index exists")
 
-                n_lists = (
-                    int(max(n_records / 1000, 30))
-                    if n_records < 1_000_000
-                    else int(math.sqrt(n_records))
-                )
+                if method == IndexMethod.ivfflat:
+                    n_records: int = sess.execute(func.count(self.table.c.id)).scalar()  # type: ignore
 
-                unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
-
-                sess.execute(
-                    text(
-                        f"""
-                        create index ix_{ops}_{n_lists}_{unique_string}
-                          on vecs."{clone_table.name}"
-                          using ivfflat (vec {ops}) with (lists={n_lists})
-                        """
+                    n_lists = (
+                        int(max(n_records / 1000, 30))
+                        if n_records < 1_000_000
+                        else int(math.sqrt(n_records))
                     )
-                )
 
-                sess.execute(
-                    text(
-                        f"""
-                        create index ix_meta_{unique_string}
-                          on vecs."{clone_table.name}"
-                          using gin ( metadata jsonb_path_ops )
-                        """
+                    sess.execute(
+                        text(
+                            f"""
+                            create index ix_{ops}_ivfflat_{n_lists}_{unique_string}
+                              on vecs."{self.table.name}"
+                              using ivfflat (vec {ops}) with (lists={n_lists})
+                            """
+                        )
                     )
-                )
 
-                # Fully populate the table
-                stmt = postgresql.insert(clone_table).from_select(
-                    self.table.c, select(self.table)
-                )
-                stmt = stmt.on_conflict_do_nothing()
-                sess.execute(stmt)
-
-                # Replace the table
-                sess.execute(text(f"drop table vecs.{self.table.name};"))
-                sess.execute(
-                    text(
-                        f"alter table vecs._{self.table.name} rename to {self.table.name};"
+                if method == IndexMethod.hnsw:
+                    sess.execute(
+                        text(
+                            f"""
+                            create index ix_{ops}_hnsw_{unique_string}
+                              on vecs."{self.table.name}"
+                              using hnsw (vec {ops});
+                            """
+                        )
                     )
-                )
+
         return None
 
 

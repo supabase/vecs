@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 
 import vecs
+from vecs import IndexMethod
+from vecs.exc import ArgError
 
 
 def test_upsert(client: vecs.Client) -> None:
@@ -584,6 +586,40 @@ def test_create_index(client: vecs.Client) -> None:
     )
 
 
+def test_ivfflat(client: vecs.Client) -> None:
+    dim = 4
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+
+    bar.create_index(method="ivfflat")  # type: ignore
+    results = bar.query(data=[1, 2, 3, 4], limit=1, probes=50)
+    assert len(results) == 1
+
+    bar.create_index(method=IndexMethod.ivfflat, replace=True)  # type: ignore
+    results = bar.query(
+        data=[1, 2, 3, 4],
+        limit=1,
+    )
+    assert len(results) == 1
+
+
+def test_hnsw(client: vecs.Client) -> None:
+    dim = 4
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+
+    bar.create_index(method="hnsw")  # type: ignore
+    results = bar.query(
+        data=[1, 2, 3, 4],
+        limit=1,
+    )
+    assert len(results) == 1
+
+    bar.create_index(method=IndexMethod.hnsw, replace=True)  # type: ignore
+    results = bar.query(data=[1, 2, 3, 4], limit=1, ef_search=50)
+    assert len(results) == 1
+
+
 def test_cosine_index_query(client: vecs.Client) -> None:
     dim = 4
     bar = client.get_or_create_collection(name="bar", dimension=dim)
@@ -648,3 +684,29 @@ def test_is_indexed_for_measure(client: vecs.Client) -> None:
 
     bar.create_index(measure=vecs.IndexMeasure.cosine_distance, replace=True)
     assert bar.is_indexed_for_measure(vecs.IndexMeasure.cosine_distance)
+
+
+def test_failover_ivfflat(client: vecs.Client) -> None:
+    """Test that index fails over to ivfflat on 0.4.0
+    This is already covered by CI's test matrix but it is convenient for faster feedback
+    to include it when running on the latest version of pgvector
+    """
+    client.vector_version = "0.4.1"
+    dim = 4
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+    # this executes an otherwise uncovered line of code that selects ivfflat when mode is 'auto'
+    # and hnsw is unavailable
+    bar.create_index(method=IndexMethod.auto)
+
+
+def test_hnsw_unavailable_error(client: vecs.Client) -> None:
+    """Test that index fails over to ivfflat on 0.4.0
+    This is already covered by CI's test matrix but it is convenient for faster feedback
+    to include it when running on the latest version of pgvector
+    """
+    client.vector_version = "0.4.1"
+    dim = 4
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
+    with pytest.raises(ArgError):
+        bar.create_index(method=IndexMethod.hnsw)

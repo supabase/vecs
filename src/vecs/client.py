@@ -47,7 +47,7 @@ class Client:
         vx.disconnect()
     """
 
-    def __init__(self, connection_string):
+    def __init__(self, connection_string: str):
         """
         Initialize a Client instance.
 
@@ -65,6 +65,20 @@ class Client:
             with sess.begin():
                 sess.execute(text("create schema if not exists vecs;"))
                 sess.execute(text("create extension if not exists vector;"))
+                self.vector_version: str = sess.execute(
+                    text(
+                        "select installed_version from pg_available_extensions where name = 'vector' limit 1;"
+                    )
+                ).scalar_one()
+
+    def _supports_hnsw(self):
+        return (
+            not self.vector_version.startswith("0.4")
+            and not self.vector_version.startswith("0.3")
+            and not self.vector_version.startswith("0.2")
+            and not self.vector_version.startswith("0.1")
+            and not self.vector_version.startswith("0.0")
+        )
 
     def get_or_create_collection(
         self,
