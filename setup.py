@@ -5,6 +5,7 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 import setuptools
 
@@ -36,6 +37,7 @@ def read_package_variable(key, filename="__init__.py"):
 
 check_python_version()
 
+long_description = (Path(__file__).parent / "README.md").read_text()
 
 REQUIRES = [
     "pgvector==0.1.*",
@@ -50,6 +52,8 @@ setuptools.setup(
     name=read_package_variable("__project__"),
     version=read_package_variable("__version__"),
     description="pgvector client",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/supabase/vecs",
     author="Oliver Rice",
     packages=setuptools.find_packages("src", exclude="tests"),
