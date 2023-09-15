@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 
 import vecs
-from vecs.collection import IndexMethod
+from vecs import IndexMethod
+from vecs.exc import ArgError
 
 
 def test_upsert(client: vecs.Client) -> None:
@@ -697,3 +698,15 @@ def test_failover_ivfflat(client: vecs.Client) -> None:
     # this executes an otherwise uncovered line of code that selects ivfflat when mode is 'auto'
     # and hnsw is unavailable
     bar.create_index(method=IndexMethod.auto)
+
+
+def test_hnsw_unavailable_error(client: vecs.Client) -> None:
+    """Test that index fails over to ivfflat on 0.4.0
+    This is already covered by CI's test matrix but it is convenient for faster feedback
+    to include it when running on the latest version of pgvector
+    """
+    client.vector_version = "0.4.1"
+    dim = 4
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
+    with pytest.raises(ArgError):
+        bar.create_index(method=IndexMethod.hnsw)

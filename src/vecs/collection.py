@@ -664,6 +664,11 @@ class Collection:
             else:
                 method = IndexMethod.ivfflat
 
+        if method == IndexMethod.hnsw and not self.client._supports_hnsw():
+            raise ArgError(
+                "HNSW Unavailable. Upgrade your pgvector installation to > 0.5.0 to enable HNSW support"
+            )
+
         ops = INDEX_MEASURE_TO_OPS.get(measure)
         if ops is None:
             raise ArgError("Unknown index measure")
