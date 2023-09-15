@@ -664,13 +664,6 @@ class Collection:
             else:
                 method = IndexMethod.ivfflat
 
-        if method == IndexMethod.ivfflat:
-            warnings.warn(
-                UserWarning(
-                    f"vecs will drop support for ivfflat indexes in version 1.0. upgrade to pgvector >= 0.5.0 and use IndexMethod.hnsw"
-                )
-            )
-
         ops = INDEX_MEASURE_TO_OPS.get(measure)
         if ops is None:
             raise ArgError("Unknown index measure")

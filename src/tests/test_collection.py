@@ -590,13 +590,11 @@ def test_ivfflat(client: vecs.Client) -> None:
     bar = client.get_or_create_collection(name="bar", dimension=dim)
     bar.upsert([("a", [1, 2, 3, 4], {})])
 
-    with pytest.warns(UserWarning):
-        bar.create_index(method="ivfflat")  # type: ignore
+    bar.create_index(method="ivfflat")  # type: ignore
     results = bar.query(data=[1, 2, 3, 4], limit=1, probes=50)
     assert len(results) == 1
 
-    with pytest.warns(UserWarning):
-        bar.create_index(method=IndexMethod.ivfflat, replace=True)  # type: ignore
+    bar.create_index(method=IndexMethod.ivfflat, replace=True)  # type: ignore
     results = bar.query(
         data=[1, 2, 3, 4],
         limit=1,
@@ -698,5 +696,4 @@ def test_failover_ivfflat(client: vecs.Client) -> None:
     bar.upsert([("a", [1, 2, 3, 4], {})])
     # this executes an otherwise uncovered line of code that selects ivfflat when mode is 'auto'
     # and hnsw is unavailable
-    with pytest.warns(UserWarning):
-        bar.create_index(method=IndexMethod.auto)
+    bar.create_index(method=IndexMethod.auto)
