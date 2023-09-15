@@ -1,8 +1,8 @@
 # Collections
 
 A collection is an group of vector records.
-Records can be [added to or updated in](/vecs/api/#upserting-vectors) a collection.
-Collections can be [queried](/vecs/api/#query) at any time, but should be [indexed](/vecs/api/#create-an-index) for scalable query performance.
+Records can be [added to or updated in](api.md/#upserting-vectors) a collection.
+Collections can be [queried](api.md/#query) at any time, but should be [indexed](api.md/#create-an-index) for scalable query performance.
 
 Each vector record has the form:
 
