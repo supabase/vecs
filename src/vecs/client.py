@@ -72,7 +72,13 @@ class Client:
                 ).scalar_one()
 
     def _supports_hnsw(self):
-        return not self.vector_version.startswith("0.4")
+        return (
+            not self.vector_version.startswith("0.4")
+            and not self.vector_version.startswith("0.3")
+            and not self.vector_version.startswith("0.2")
+            and not self.vector_version.startswith("0.1")
+            and not self.vector_version.startswith("0.0")
+        )
 
     def get_or_create_collection(
         self,
