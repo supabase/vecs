@@ -399,6 +399,7 @@ class Collection:
         include_metadata: bool = False,
         *,
         probes: Optional[int] = None,
+        ef_search: Optional[int] = None,
         skip_adapter: bool = False,
     ) -> Union[List[Record], List[str]]:
         """
@@ -414,6 +415,8 @@ class Collection:
             include_value (bool, optional): Whether to include the distance value in the results. Defaults to False.
             include_metadata (bool, optional): Whether to include the metadata in the results. Defaults to False.
             probes (Optional[Int], optional): Number of ivfflat index lists to query. Higher increases accuracy but decreases speed
+            ef_search (Optional[Int], optional): Size of the dynamic candidate list for HNSW index search. Higher increases accuracy but decreases speed
+            skip_adapter (bool, optional): When True, skips any associated adapter and queries using a literal vector provided to *data*
 
         Returns:
             Union[List[Record], List[str]]: The result of the similarity search.
@@ -421,6 +424,9 @@ class Collection:
 
         if probes is None:
             probes = 10
+
+        if ef_search is None:
+            ef_search = 40
 
         if not isinstance(probes, int):
             raise ArgError("probes must be an integer")
@@ -488,6 +494,12 @@ class Collection:
                 sess.execute(
                     text("set local ivfflat.probes = :probes").bindparams(probes=probes)
                 )
+                if self.client._supports_hnsw():
+                    sess.execute(
+                        text("set local hnsw.ef_search = :ef_search").bindparams(
+                            ef_search=ef_search
+                        )
+                    )
                 if len(cols) == 1:
                     return [str(x) for x in sess.scalars(stmt).fetchall()]
                 return sess.execute(stmt).fetchall() or []
