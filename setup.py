@@ -76,7 +76,13 @@ setuptools.setup(
     install_requires=REQUIRES,
     extras_require={
         "dev": ["pytest", "parse", "numpy", "pytest-cov"],
-        "docs": ["mkdocs", "pygments", "pymdown-extensions", "pymarkdown"],
+        "docs": [
+            "mkdocs",
+            "pygments",
+            "pymdown-extensions",
+            "pymarkdown",
+            "mike",
+        ],
         "text_embedding": ["sentence-transformers==2.*"],
     },
 )
