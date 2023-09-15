@@ -42,7 +42,7 @@ pip install vecs
 
 ## Usage
 
-Visit the [quickstart guide](https://supabase.github.io/vecs/api/) for more complete info.
+Visit the [quickstart guide](https://supabase.github.io/vecs/latest/api) for more complete info.
 
 ```python
 import vecs
@@ -53,7 +53,7 @@ DB_CONNECTION = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
 vx = vecs.create_client(DB_CONNECTION)
 
 # create a collection of vectors with 3 dimensions
-docs = vx.create_collection(name="docs", dimension=3)
+docs = vx.get_or_create_collection(name="docs", dimension=3)
 
 # add records to the *docs* collection
 docs.upsert(

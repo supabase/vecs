@@ -71,27 +71,19 @@ docs.delete(ids=["vec0", "vec1"])
 ## Create an index
 
 Collections can be queried immediately after being created.
-However, for good performance, the collection should be indexed after records have been upserted.
-
-Indexes should be created __after__ the collection has been populated with records. Building an index
-on an empty collection will result in significantly reduced recall. Once the index has been created
-you can still upsert new documents into the collection but you should rebuild the index if the size of
-the collection more than doubles.
+However, for good throughput, the collection should be indexed after records have been upserted.
 
 Only one index may exist per-collection. By default, creating an index will replace any existing index.
 
 To create an index:
 
 ```python
-##
-# INSERT RECORDS HERE
-##
-
-# index the collection to be queried by cosine distance
-docs.create_index(measure=vecs.IndexMeasure.cosine_distance)
+docs.create_index()
 ```
 
-Available options for query `measure` are:
+You may optionally provide a distance measure and index method.
+
+Available options for distance `measure` are:
 
 - `vecs.IndexMeasure.cosine_distance`
 - `vecs.IndexMeasure.l2_distance`
@@ -99,10 +91,27 @@ Available options for query `measure` are:
 
 which correspond to different methods for comparing query vectors to the vectors in the database.
 
-If you aren't sure which to use, stick with the default (cosine_distance) by omitting the parameter i.e.
+If you aren't sure which to use, the default of cosine_distance is the most widely compatible with off-the-shelf embedding methods.
+
+Available options for index `method` are:
+
+- `vecs.IndexMethod.auto`
+- `vecs.IndexMethod.hnsw`
+- `vecs.IndexMethod.ivfflat`
+
+Where `auto` selects the best available index method, `hnsw` uses the [HNSW](https://github.com/pgvector/pgvector#hnsw) method and `ivfflat` uses [IVFFlat](https://github.com/pgvector/pgvector#ivfflat).
+
+When using IVFFlat indexes, the index must be created __after__ the collection has been populated with records. Building an IVFFlat index on an empty collection will result in significantly reduced recall. You can continue upserting new documents after the index has been created, but should rebuild the index if the size of the collection more than doubles since the last index operation.
+
+HNSW indexes can be created immediately after the collection without populating records.
+
+To manually specify `method` and `measure`, ass them as arguments to `create_index` for example:
 
 ```python
-docs.create_index()
+docs.create_index(
+    method=IndexMethod.hnsw,
+    measure=IndexMeasure.cosine_distance,
+)
 ```
 
 !!! note
