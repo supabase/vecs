@@ -22,4 +22,13 @@
 
 - Feature: Metadata filtering with `$in`
 
+## 0.4.0
+
+- Feature: pgvector 0.5.0
+- Feature: HNSW index support
+
+## 0.4.1
+
+- Bugfix: removed errant print statement
+
 ## master
