@@ -314,9 +314,7 @@ class Collection:
                             vec=stmt.excluded.vec, metadata=stmt.excluded.metadata
                         ),
                     )
-                    print("exec start", flush=True)
                     sess.execute(stmt)
-                    print("exec stop", flush=True)
         return None
 
     def fetch(self, ids: Iterable[str]) -> List[Record]:
