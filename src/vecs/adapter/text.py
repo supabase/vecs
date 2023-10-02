@@ -35,7 +35,13 @@ class TextEmbedding(AdapterStep):
     embeddings using a specified sentence transformers model.
     """
 
-    def __init__(self, *, model: TextEmbeddingModel, batch_size: int = 8,  use_auth_token: str = None):
+    def __init__(
+        self,
+        *,
+        model: TextEmbeddingModel,
+        batch_size: int = 8,
+        use_auth_token: str = None,
+    ):
         """
         Initializes the TextEmbedding adapter with a sentence transformers model.
 
