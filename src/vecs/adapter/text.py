@@ -35,13 +35,14 @@ class TextEmbedding(AdapterStep):
     embeddings using a specified sentence transformers model.
     """
 
-    def __init__(self, *, model: TextEmbeddingModel, batch_size: int = 8):
+    def __init__(self, *, model: TextEmbeddingModel, batch_size: int = 8,  use_auth_token: str = None):
         """
         Initializes the TextEmbedding adapter with a sentence transformers model.
 
         Args:
             model (TextEmbeddingModel): The sentence transformers model to use for embeddings.
             batch_size (int): The number of records to encode simultaneously.
+            use_auth_token (str): The HuggingFace Hub auth token to use for private models.
 
         Raises:
             MissingDependency: If the sentence_transformers library is not installed.
@@ -53,7 +54,7 @@ class TextEmbedding(AdapterStep):
                 "Missing feature vecs[text_embedding]. Hint: `pip install 'vecs[text_embedding]'`"
             )
 
-        self.model = ST(model)
+        self.model = ST(model, use_auth_token=use_auth_token)
         self._exported_dimension = self.model.get_sentence_embedding_dimension()
         self.batch_size = batch_size
 
