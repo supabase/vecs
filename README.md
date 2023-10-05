@@ -18,7 +18,7 @@
 
 ---
 
-**Documentation**: <a href="https://supabase.github.io/vecs/api/" target="_blank">https://supabase.github.io/vecs/api/</a>
+**Documentation**: <a href="https://supabase.github.io/vecs/" target="_blank">https://supabase.github.io/vecs/</a>
 
 **Source Code**: <a href="https://github.com/supabase/vecs" target="_blank">https://github.com/supabase/vecs</a>
 
