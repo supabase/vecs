@@ -105,7 +105,7 @@ When using IVFFlat indexes, the index must be created __after__ the collection h
 
 HNSW indexes can be created immediately after the collection without populating records.
 
-To manually specify `method` and `measure`, ass them as arguments to `create_index` for example:
+To manually specify `method` and `measure`, add them as arguments to `create_index` for example:
 
 ```python
 docs.create_index(
