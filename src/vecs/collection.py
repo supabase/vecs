@@ -381,10 +381,8 @@ class Collection:
         del_ids = []
         with self.client.Session() as sess:
             with sess.begin():
-                # Build the filter for the metadata
                 meta_filter = build_filters(self.table.c.metadata, metadata)
                 
-                # Perform the delete operation
                 stmt = (
                     delete(self.table)
                     .where(meta_filter)
@@ -424,7 +422,6 @@ class Collection:
                         del_ids.extend(sess.execute(stmt).scalars() or [])
                 
                 if metadata is not None:
-                    # Assuming build_filters is a previously defined function
                     meta_filter = build_filters(self.table.c.metadata, metadata)
                     stmt = (
                         delete(self.table)
