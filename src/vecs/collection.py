@@ -395,6 +395,16 @@ class Collection:
         return del_ids
 
     def delete_vectors(self, ids: Optional[Iterable[str]] = None, metadata: Optional[Metadata] = None) -> List[str]:
+        """
+        Deletes vectors from the collection by matching metadata.
+
+        Args:
+            ids (Iterable[str]): An iterable of vector identifiers.
+            metadata (Metadata): A dictionary of metadata key-value pairs to match.
+
+        Returns:
+            List[str]: A list of the identifiers of the deleted vectors.
+        """
         if ids is None and metadata is None:
             raise VectorDeletionError("Either ids or metadata must be provided.")
 
