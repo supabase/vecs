@@ -368,6 +368,64 @@ class Collection:
                     ids.extend(sess.execute(stmt).scalars() or [])
         return ids
 
+    def delete_by_metadata(self, metadata: Metadata) -> List[str]:
+        """
+        Deletes vectors from the collection by matching metadata.
+
+        Args:
+            metadata (Metadata): A dictionary of metadata key-value pairs to match.
+
+        Returns:
+            List[str]: A list of the identifiers of the deleted vectors.
+        """
+        del_ids = []
+        with self.client.Session() as sess:
+            with sess.begin():
+                # Build the filter for the metadata
+                meta_filter = build_filters(self.table.c.metadata, metadata)
+                
+                # Perform the delete operation
+                stmt = (
+                    delete(self.table)
+                    .where(meta_filter)
+                    .returning(self.table.c.id)
+                )
+                result = sess.execute(stmt)
+                del_ids = [row[0] for row in result.fetchall()]
+        return del_ids
+
+    def delete_vectors(self, ids: Optional[Iterable[str]] = None, metadata: Optional[Metadata] = None) -> List[str]:
+        if ids is None and metadata is None:
+            raise VectorDeletionError("Either ids or metadata must be provided.")
+
+        del_ids = []
+
+        with self.client.Session() as sess:
+            with sess.begin():
+                if ids is not None:
+                    if isinstance(ids, str):
+                        raise ArgError("ids must be a list of strings")
+                    for id_chunk in flu(ids).chunk(12):
+                        stmt = (
+                            delete(self.table)
+                            .where(self.table.c.id.in_(id_chunk))
+                            .returning(self.table.c.id)
+                        )
+                        del_ids.extend(sess.execute(stmt).scalars() or [])
+                
+                if metadata is not None:
+                    # Assuming build_filters is a previously defined function
+                    meta_filter = build_filters(self.table.c.metadata, metadata)
+                    stmt = (
+                        delete(self.table)
+                        .where(meta_filter)
+                        .returning(self.table.c.id)
+                    )
+                    result = sess.execute(stmt)
+                    del_ids.extend([row[0] for row in result.fetchall()])
+
+        return del_ids
+
     def __getitem__(self, items):
         """
         Fetches a vector from the collection by its identifier.
