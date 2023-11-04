@@ -62,10 +62,12 @@ docs.upsert(
 
 ## Deleting vectors
 
-Deleting records removes them from the collection. To delete records, specify a list of `ids` to the `delete` method. The ids of the sucessfully deleted records are returned from the method. Note that attempting to delete non-existent records does not raise an error.
+Deleting records removes them from the collection. To delete records, specify a list of `ids` or metadata filters to the `delete` method. The ids of the sucessfully deleted records are returned from the method. Note that attempting to delete non-existent records does not raise an error.
 
 ```python
 docs.delete(ids=["vec0", "vec1"])
+# or delete with filters
+docs.delete(filters={"year": {"$eq": 2012}})
 ```
 
 ## Create an index

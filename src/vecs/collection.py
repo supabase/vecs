@@ -340,70 +340,18 @@ class Collection:
                     records.extend(chunk_records)
         return records
 
-    def delete(self, ids: Iterable[str]) -> List[str]:
+    def delete(self, ids: Optional[Iterable[str]] = None, filters: Optional[Metadata] = None) -> List[str]:
         """
-        Deletes vectors from the collection by their identifiers.
+        Deletes vectors from the collection by matching filters or ids.
 
         Args:
             ids (Iterable[str]): An iterable of vector identifiers.
+            filters (Metadata): A dictionary of metadata key-value pairs to match.
 
         Returns:
             List[str]: A list of the identifiers of the deleted vectors.
         """
-        if isinstance(ids, str):
-            raise ArgError("ids must be a list of strings")
-
-        chunk_size = 12
-
-        del_ids = list(ids)
-        ids = []
-        with self.client.Session() as sess:
-            with sess.begin():
-                for id_chunk in flu(del_ids).chunk(chunk_size):
-                    stmt = (
-                        delete(self.table)
-                        .where(self.table.c.id.in_(id_chunk))
-                        .returning(self.table.c.id)
-                    )
-                    ids.extend(sess.execute(stmt).scalars() or [])
-        return ids
-
-    def delete_by_metadata(self, metadata: Metadata) -> List[str]:
-        """
-        Deletes vectors from the collection by matching metadata.
-
-        Args:
-            metadata (Metadata): A dictionary of metadata key-value pairs to match.
-
-        Returns:
-            List[str]: A list of the identifiers of the deleted vectors.
-        """
-        del_ids = []
-        with self.client.Session() as sess:
-            with sess.begin():
-                meta_filter = build_filters(self.table.c.metadata, metadata)
-                
-                stmt = (
-                    delete(self.table)
-                    .where(meta_filter)
-                    .returning(self.table.c.id)
-                )
-                result = sess.execute(stmt)
-                del_ids = [row[0] for row in result.fetchall()]
-        return del_ids
-
-    def delete_vectors(self, ids: Optional[Iterable[str]] = None, metadata: Optional[Metadata] = None) -> List[str]:
-        """
-        Deletes vectors from the collection by matching metadata.
-
-        Args:
-            ids (Iterable[str]): An iterable of vector identifiers.
-            metadata (Metadata): A dictionary of metadata key-value pairs to match.
-
-        Returns:
-            List[str]: A list of the identifiers of the deleted vectors.
-        """
-        if ids is None and metadata is None:
+        if ids is None and filters is None:
             raise VectorDeletionError("Either ids or metadata must be provided.")
 
         del_ids = []
@@ -421,8 +369,8 @@ class Collection:
                         )
                         del_ids.extend(sess.execute(stmt).scalars() or [])
                 
-                if metadata is not None:
-                    meta_filter = build_filters(self.table.c.metadata, metadata)
+                if filters is not None:
+                    meta_filter = build_filters(self.table.c.metadata, filters)
                     stmt = (
                         delete(self.table)
                         .where(meta_filter)
