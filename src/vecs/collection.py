@@ -690,8 +690,29 @@ class Collection:
             ArgError: If an invalid index method is used, or if *replace* is False and an index already exists.
         """
 
-        if not method in (IndexMethod.ivfflat, IndexMethod.hnsw, IndexMethod.auto):
+        if method not in (IndexMethod.ivfflat, IndexMethod.hnsw, IndexMethod.auto):
             raise ArgError("invalid index method")
+
+        if index_arguments:
+            # Disallow case where user submits index arguments but uses the
+            # IndexMethod.auto index (index build arguments should only be
+            # used with a specific index)
+            if method == IndexMethod.auto:
+                raise ArgError(
+                    "Index build parameters are not allowed when using the IndexMethod.auto index."
+                )
+            # Disallow case where user specifies one index type but submits
+            # index build arguments for the other index type
+            if (
+                isinstance(index_arguments, IndexArgsHNSW)
+                and method != IndexMethod.hnsw
+            ) or (
+                isinstance(index_arguments, IndexArgsIVFFlat)
+                and method != IndexMethod.ivfflat
+            ):
+                raise ArgError(
+                    f"{index_arguments.__class__.__name__} build parameters were supplied but {method} index was specified."
+                )
 
         if method == IndexMethod.auto:
             if self.client._supports_hnsw():
@@ -703,24 +724,6 @@ class Collection:
             raise ArgError(
                 "HNSW Unavailable. Upgrade your pgvector installation to > 0.5.0 to enable HNSW support"
             )
-
-        # Catch case where use submits index build args for one index type but
-        # method defines a different index type.
-        if index_arguments and (
-            (isinstance(index_arguments, IndexArgsHNSW) and method != IndexMethod.hnsw)
-            or (
-                isinstance(index_arguments, IndexArgsIVFFlat)
-                and method != IndexMethod.ivfflat
-            )
-        ):
-            warnings.warn(
-                UserWarning(
-                    f"{index_arguments.__class__.__name__} build parameters were supplied but {method} index was specified. Default parameters for {method} index will be used instead."
-                )
-            )
-            # set index_arguments to None in order to instantiate
-            # with the default values later
-            index_arguments = None
 
         ops = INDEX_MEASURE_TO_OPS.get(measure)
         if ops is None:
