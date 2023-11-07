@@ -684,6 +684,7 @@ class Collection:
         Args:
             measure (IndexMeasure, optional): The measure to index for. Defaults to 'cosine_distance'.
             method (IndexMethod, optional): The indexing method to use. Defaults to 'auto'.
+            index_arguments: (IndexArgsIVFFlat | IndexArgsHNSW, optional): Index type specific arguments
             replace (bool, optional): Whether to replace the existing index. Defaults to True.
 
         Raises:
