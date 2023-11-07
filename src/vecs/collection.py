@@ -9,6 +9,7 @@ from __future__ import annotations
 import math
 import uuid
 import warnings
+from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -80,6 +81,40 @@ class IndexMeasure(str, Enum):
     cosine_distance = "cosine_distance"
     l2_distance = "l2_distance"
     max_inner_product = "max_inner_product"
+
+
+@dataclass
+class IndexArgsIVFFlat:
+    """
+    A class for arguments that can optionally be supplied to the index creation
+    method when building an IVFFlat type index.
+
+    Attributes:
+        nlist (int): The number of IVF centroids that the index should use
+    """
+
+    n_lists: int
+
+
+@dataclass
+class IndexArgsHNSW:
+    """
+    A class for arguments that can optionally be supplied to the index creation
+    method when building an HNSW type index.
+
+    Ref: https://github.com/pgvector/pgvector#index-options
+
+    Both attributes are Optional in case the user only wants to specify one and
+    leave the other as default
+
+    Attributes:
+        m (int): Maximum number of connections per node per layer (default: 16)
+        ef_construction (int): Size of the dynamic candidate list for
+            constructing the graph (default: 64)
+    """
+
+    m: Optional[int] = 16
+    ef_construction: Optional[int] = 64
 
 
 INDEX_MEASURE_TO_OPS = {
@@ -621,6 +656,7 @@ class Collection:
         self,
         measure: IndexMeasure = IndexMeasure.cosine_distance,
         method: IndexMethod = IndexMethod.auto,
+        index_arguments: Optional[Union[IndexArgsIVFFlat, IndexArgsHNSW]] = None,
         replace=True,
     ) -> None:
         """
@@ -648,13 +684,36 @@ class Collection:
         Args:
             measure (IndexMeasure, optional): The measure to index for. Defaults to 'cosine_distance'.
             method (IndexMethod, optional): The indexing method to use. Defaults to 'auto'.
+            index_arguments: (IndexArgsIVFFlat | IndexArgsHNSW, optional): Index type specific arguments
             replace (bool, optional): Whether to replace the existing index. Defaults to True.
 
         Raises:
             ArgError: If an invalid index method is used, or if *replace* is False and an index already exists.
         """
-        if not method in (IndexMethod.ivfflat, IndexMethod.hnsw, IndexMethod.auto):
+
+        if method not in (IndexMethod.ivfflat, IndexMethod.hnsw, IndexMethod.auto):
             raise ArgError("invalid index method")
+
+        if index_arguments:
+            # Disallow case where user submits index arguments but uses the
+            # IndexMethod.auto index (index build arguments should only be
+            # used with a specific index)
+            if method == IndexMethod.auto:
+                raise ArgError(
+                    "Index build parameters are not allowed when using the IndexMethod.auto index."
+                )
+            # Disallow case where user specifies one index type but submits
+            # index build arguments for the other index type
+            if (
+                isinstance(index_arguments, IndexArgsHNSW)
+                and method != IndexMethod.hnsw
+            ) or (
+                isinstance(index_arguments, IndexArgsIVFFlat)
+                and method != IndexMethod.ivfflat
+            ):
+                raise ArgError(
+                    f"{index_arguments.__class__.__name__} build parameters were supplied but {method} index was specified."
+                )
 
         if method == IndexMethod.auto:
             if self.client._supports_hnsw():
@@ -683,18 +742,27 @@ class Collection:
                         raise ArgError("replace is set to False but an index exists")
 
                 if method == IndexMethod.ivfflat:
-                    n_records: int = sess.execute(func.count(self.table.c.id)).scalar()  # type: ignore
+                    if not index_arguments:
+                        n_records: int = sess.execute(func.count(self.table.c.id)).scalar()  # type: ignore
 
-                    n_lists = (
-                        int(max(n_records / 1000, 30))
-                        if n_records < 1_000_000
-                        else int(math.sqrt(n_records))
-                    )
+                        n_lists = (
+                            int(max(n_records / 1000, 30))
+                            if n_records < 1_000_000
+                            else int(math.sqrt(n_records))
+                        )
+                    else:
+                        # The following mypy error is ignored because mypy
+                        # complains that `index_arguments` is typed as a union
+                        # of IndexArgsIVFFlat and IndexArgsHNSW types,
+                        # which both don't necessarily contain the `n_lists`
+                        # parameter, however we have validated that the
+                        # correct type is being used above.
+                        n_lists = index_arguments.n_lists  # type: ignore
 
                     sess.execute(
                         text(
                             f"""
-                            create index ix_{ops}_ivfflat_{n_lists}_{unique_string}
+                            create index ix_{ops}_ivfflat_nl{n_lists}_{unique_string}
                               on vecs."{self.table.name}"
                               using ivfflat (vec {ops}) with (lists={n_lists})
                             """
@@ -702,12 +770,20 @@ class Collection:
                     )
 
                 if method == IndexMethod.hnsw:
+                    if not index_arguments:
+                        index_arguments = IndexArgsHNSW()
+
+                    # See above for explanation of why the following lines
+                    # are ignored
+                    m = index_arguments.m  # type: ignore
+                    ef_construction = index_arguments.ef_construction  # type: ignore
+
                     sess.execute(
                         text(
                             f"""
-                            create index ix_{ops}_hnsw_{unique_string}
+                            create index ix_{ops}_hnsw_m{m}_efc{ef_construction}_{unique_string}
                               on vecs."{self.table.name}"
-                              using hnsw (vec {ops});
+                              using hnsw (vec {ops}) WITH (m={m}, ef_construction={ef_construction});
                             """
                         )
                     )

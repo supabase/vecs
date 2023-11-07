@@ -1,12 +1,26 @@
 from vecs import exc
 from vecs.client import Client
-from vecs.collection import Collection, IndexMeasure, IndexMethod
+from vecs.collection import (
+    Collection,
+    IndexArgsHNSW,
+    IndexArgsIVFFlat,
+    IndexMeasure,
+    IndexMethod,
+)
 
 __project__ = "vecs"
 __version__ = "0.4.1"
 
 
-__all__ = ["IndexMethod", "IndexMeasure", "Collection", "Client", "exc"]
+__all__ = [
+    "IndexArgsIVFFlat",
+    "IndexArgsHSNW",
+    "IndexMethod",
+    "IndexMeasure",
+    "Collection",
+    "Client",
+    "exc",
+]
 
 
 def create_client(connection_string: str) -> Client:

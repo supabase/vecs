@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 import vecs
-from vecs import IndexMethod
+from vecs import IndexArgsHNSW, IndexArgsIVFFlat, IndexMethod
 from vecs.exc import ArgError
 
 
@@ -618,6 +618,90 @@ def test_hnsw(client: vecs.Client) -> None:
     bar.create_index(method=IndexMethod.hnsw, replace=True)  # type: ignore
     results = bar.query(data=[1, 2, 3, 4], limit=1, ef_search=50)
     assert len(results) == 1
+
+
+def test_index_build_args(client: vecs.Client) -> None:
+    dim = 4
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+
+    # Test that default value for nlists is used in absence of index build args
+    bar.create_index(method="ivfflat")
+    [nlists] = [i for i in bar.index.split("_") if i.startswith("nl")]
+    assert int(nlists.strip("nl")) == 30
+
+    # Test nlists is honored when supplied
+    bar.create_index(
+        method=IndexMethod.ivfflat,
+        index_arguments=IndexArgsIVFFlat(n_lists=123),
+        replace=True,
+    )
+    [nlists] = [i for i in bar.index.split("_") if i.startswith("nl")]
+    assert int(nlists.strip("nl")) == 123
+
+    # Test that default values for m and ef_construction are used in absence of
+    # index build args
+    bar.create_index(method="hnsw", replace=True)
+    [m] = [i for i in bar.index.split("_") if i.startswith("m")]
+    [ef_construction] = [i for i in bar.index.split("_") if i.startswith("efc")]
+    assert int(m.strip("m")) == 16
+    assert int(ef_construction.strip("efc")) == 64
+
+    # Test m and ef_construction is honored when supplied
+    bar.create_index(
+        method="hnsw",
+        index_arguments=IndexArgsHNSW(m=8, ef_construction=123),
+        replace=True,
+    )
+    [m] = [i for i in bar.index.split("_") if i.startswith("m")]
+    [ef_construction] = [i for i in bar.index.split("_") if i.startswith("efc")]
+    assert int(m.strip("m")) == 8
+    assert int(ef_construction.strip("efc")) == 123
+
+    # Test m is honored and ef_construction is default when _only_ m is supplied
+    bar.create_index(method="hnsw", index_arguments=IndexArgsHNSW(m=8), replace=True)
+    [m] = [i for i in bar.index.split("_") if i.startswith("m")]
+    [ef_construction] = [i for i in bar.index.split("_") if i.startswith("efc")]
+    assert int(m.strip("m")) == 8
+    assert int(ef_construction.strip("efc")) == 64
+
+    # Test m is default and ef_construction is honoured when _only_
+    # ef_construction is supplied
+    bar.create_index(
+        method="hnsw", index_arguments=IndexArgsHNSW(ef_construction=123), replace=True
+    )
+    [m] = [i for i in bar.index.split("_") if i.startswith("m")]
+    [ef_construction] = [i for i in bar.index.split("_") if i.startswith("efc")]
+    assert int(m.strip("m")) == 16
+    assert int(ef_construction.strip("efc")) == 123
+
+    # Test that exception is raised when index build args don't match
+    # the requested index type
+    with pytest.raises(vecs.exc.ArgError):
+        bar.create_index(
+            method=IndexMethod.ivfflat, index_arguments=IndexArgsHNSW(), replace=True
+        )
+    with pytest.raises(vecs.exc.ArgError):
+        bar.create_index(
+            method=IndexMethod.hnsw,
+            index_arguments=IndexArgsIVFFlat(n_lists=123),
+            replace=True,
+        )
+
+    # Test that excpetion is raised index build args are supplied by the
+    # IndexMethod.auto index is specified
+    with pytest.raises(vecs.exc.ArgError):
+        bar.create_index(
+            method=IndexMethod.auto,
+            index_arguments=IndexArgsIVFFlat(n_lists=123),
+            replace=True,
+        )
+    with pytest.raises(vecs.exc.ArgError):
+        bar.create_index(
+            method=IndexMethod.auto,
+            index_arguments=IndexArgsHNSW(),
+            replace=True,
+        )
 
 
 def test_cosine_index_query(client: vecs.Client) -> None:
