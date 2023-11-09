@@ -32,3 +32,5 @@
 - Bugfix: removed errant print statement
 
 ## master
+
+- Feature: Parameterized IVFFlat and HNSW indexes

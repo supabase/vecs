@@ -103,16 +103,19 @@ Available options for index `method` are:
 
 Where `auto` selects the best available index method, `hnsw` uses the [HNSW](https://github.com/pgvector/pgvector#hnsw) method and `ivfflat` uses [IVFFlat](https://github.com/pgvector/pgvector#ivfflat).
 
+HNSW and IVFFlat indexes both allow for parameterization to control the speed/accuracy tradeoff. vecs provides sane defaults for these parameters. For a greater level of control you can optionally pass an instance of `vecs.IndexArgsIVFFlat` or `vecs.IndexArgsHNSW` to `create_index`'s `index_arguments` argument. Descriptions of the impact for each parameter are available in the [pgvector docs](https://github.com/pgvector/pgvector).
+
 When using IVFFlat indexes, the index must be created __after__ the collection has been populated with records. Building an IVFFlat index on an empty collection will result in significantly reduced recall. You can continue upserting new documents after the index has been created, but should rebuild the index if the size of the collection more than doubles since the last index operation.
 
 HNSW indexes can be created immediately after the collection without populating records.
 
-To manually specify `method` and `measure`, add them as arguments to `create_index` for example:
+To manually specify `method`, `measure`, and `index_arguments` add them as arguments to `create_index` for example:
 
 ```python
 docs.create_index(
     method=IndexMethod.hnsw,
     measure=IndexMeasure.cosine_distance,
+    measure=IndexArgsHNSW(m=8),
 )
 ```
 
