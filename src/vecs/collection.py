@@ -375,33 +375,52 @@ class Collection:
                     records.extend(chunk_records)
         return records
 
-    def delete(self, ids: Iterable[str]) -> List[str]:
+    def delete(
+        self, ids: Optional[Iterable[str]] = None, filters: Optional[Metadata] = None
+    ) -> List[str]:
         """
-        Deletes vectors from the collection by their identifiers.
+        Deletes vectors from the collection by matching filters or ids.
 
         Args:
-            ids (Iterable[str]): An iterable of vector identifiers.
+            ids (Iterable[str], optional): An iterable of vector identifiers.
+            filters (Optional[Dict], optional): Filters to apply to the search. Defaults to None.
 
         Returns:
             List[str]: A list of the identifiers of the deleted vectors.
         """
+        if ids is None and filters is None:
+            raise ArgError("Either ids or filters must be provided.")
+
+        if ids is not None and filters is not None:
+            raise ArgError("Either ids or filters must be provided, not both.")
+
         if isinstance(ids, str):
             raise ArgError("ids must be a list of strings")
 
-        chunk_size = 12
+        ids = ids or []
+        filters = filters or {}
+        del_ids = []
 
-        del_ids = list(ids)
-        ids = []
         with self.client.Session() as sess:
             with sess.begin():
-                for id_chunk in flu(del_ids).chunk(chunk_size):
+                if ids:
+                    for id_chunk in flu(ids).chunk(12):
+                        stmt = (
+                            delete(self.table)
+                            .where(self.table.c.id.in_(id_chunk))
+                            .returning(self.table.c.id)
+                        )
+                        del_ids.extend(sess.execute(stmt).scalars() or [])
+
+                if filters:
+                    meta_filter = build_filters(self.table.c.metadata, filters)
                     stmt = (
-                        delete(self.table)
-                        .where(self.table.c.id.in_(id_chunk))
-                        .returning(self.table.c.id)
+                        delete(self.table).where(meta_filter).returning(self.table.c.id)  # type: ignore
                     )
-                    ids.extend(sess.execute(stmt).scalars() or [])
-        return ids
+                    result = sess.execute(stmt).scalars()
+                    del_ids.extend(result.fetchall())
+
+        return del_ids
 
     def __getitem__(self, items):
         """
@@ -516,7 +535,9 @@ class Collection:
 
         stmt = select(*cols)
         if filters:
-            stmt = stmt.filter(build_filters(self.table.c.metadata, filters))  # type: ignore
+            stmt = stmt.filter(
+                build_filters(self.table.c.metadata, filters)  # type: ignore
+            )
 
         stmt = stmt.order_by(distance_clause)
         stmt = stmt.limit(limit)

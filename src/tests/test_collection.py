@@ -1,3 +1,4 @@
+import itertools
 import random
 
 import numpy as np
@@ -91,23 +92,43 @@ def test_delete(client: vecs.Client) -> None:
             f"vec{ix}",
             vec,
             {
-                "genre": random.choice(["action", "rom-com", "drama"]),
+                "genre": genre,
                 "year": int(50 * random.random()) + 1970,
             },
         )
-        for ix, vec in enumerate(np.random.random((n_records, dim)))
+        for (ix, vec), genre in zip(
+            enumerate(np.random.random((n_records, dim))),
+            itertools.cycle(["action", "rom-com", "drama"]),
+        )
     ]
 
     # insert works
     movies.upsert(records)
 
+    # delete by IDs.
     delete_ids = ["vec0", "vec15", "vec99"]
     movies.delete(ids=delete_ids)
     assert len(movies) == n_records - len(delete_ids)
 
+    # insert works
+    movies.upsert(records)
+
+    # delete with filters
+    genre_to_delete = "action"
+    deleted_ids_by_genre = movies.delete(filters={"genre": {"$eq": genre_to_delete}})
+    assert len(deleted_ids_by_genre) == 34
+
     # bad input
     with pytest.raises(vecs.exc.ArgError):
         movies.delete(ids="should_be_a_list")
+
+    # bad input: neither ids nor filters provided.
+    with pytest.raises(vecs.exc.ArgError):
+        movies.delete()
+
+    # bad input: should only provide either ids or filters, not both
+    with pytest.raises(vecs.exc.ArgError):
+        movies.delete(ids=["vec0"], filters={"genre": {"$eq": genre_to_delete}})
 
 
 def test_repr(client: vecs.Client) -> None:
