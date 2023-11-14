@@ -418,7 +418,7 @@ class Collection:
                         delete(self.table).where(meta_filter).returning(self.table.c.id)  # type: ignore
                     )
                     result = sess.execute(stmt).scalars()
-                    del_ids.extend([row for row in result.fetchall()])
+                    del_ids.extend(result.fetchall())
 
         return del_ids
 
