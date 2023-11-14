@@ -189,8 +189,7 @@ class Collection:
             ]
         )
         if len(reported_dimensions) == 0:
-            raise ArgError(
-                "One of dimension or adapter must provide a dimension")
+            raise ArgError("One of dimension or adapter must provide a dimension")
         elif len(reported_dimensions) > 1:
             raise MismatchedDimension(
                 "Dimensions reported by adapter, dimension, and collection do not match"
@@ -371,13 +370,14 @@ class Collection:
         with self.client.Session() as sess:
             with sess.begin():
                 for id_chunk in flu(ids).chunk(chunk_size):
-                    stmt = select(self.table).where(
-                        self.table.c.id.in_(id_chunk))
+                    stmt = select(self.table).where(self.table.c.id.in_(id_chunk))
                     chunk_records = sess.execute(stmt)
                     records.extend(chunk_records)
         return records
 
-    def delete(self, ids: Optional[Iterable[str]] = None, filters: Optional[Metadata] = None) -> List[str]:
+    def delete(
+        self, ids: Optional[Iterable[str]] = None, filters: Optional[Metadata] = None
+    ) -> List[str]:
         """
         Deletes vectors from the collection by matching filters or ids.
 
@@ -392,8 +392,7 @@ class Collection:
             raise ArgError("Either ids or filters must be provided.")
 
         if ids is not None and filters is not None:
-            raise ArgError(
-                "Either ids or filters must be provided, not both.")
+            raise ArgError("Either ids or filters must be provided, not both.")
 
         if isinstance(ids, str):
             raise ArgError("ids must be a list of strings")
@@ -413,11 +412,7 @@ class Collection:
                     del_ids.extend(sess.execute(stmt).scalars() or [])
 
                 meta_filter = build_filters(self.table.c.metadata, filters)
-                stmt = (
-                    delete(self.table)
-                    .where(meta_filter)
-                    .returning(self.table.c.id)
-                )
+                stmt = delete(self.table).where(meta_filter).returning(self.table.c.id)
                 result = sess.execute(stmt)
                 del_ids.extend([row[0] for row in result.fetchall()])
 
@@ -515,8 +510,7 @@ class Collection:
             ]
 
         if len(adapted_query) != 1:
-            raise ArgError(
-                "Failed to produce exactly one query vector from input")
+            raise ArgError("Failed to produce exactly one query vector from input")
 
         _, vec, _ = adapted_query[0]
 
@@ -537,8 +531,9 @@ class Collection:
 
         stmt = select(*cols)
         if filters:
-            stmt = stmt.filter(build_filters(
-                self.table.c.metadata, filters))  # type: ignore
+            stmt = stmt.filter(
+                build_filters(self.table.c.metadata, filters)
+            )  # type: ignore
 
         stmt = stmt.order_by(distance_clause)
         stmt = stmt.limit(limit)
@@ -547,8 +542,7 @@ class Collection:
             with sess.begin():
                 # index ignored if greater than n_lists
                 sess.execute(
-                    text("set local ivfflat.probes = :probes").bindparams(
-                        probes=probes)
+                    text("set local ivfflat.probes = :probes").bindparams(probes=probes)
                 )
                 if self.client._supports_hnsw():
                     sess.execute(
@@ -762,8 +756,7 @@ class Collection:
                         sess.execute(text(f'drop index vecs."{self.index}";'))
                         self._index = None
                     else:
-                        raise ArgError(
-                            "replace is set to False but an index exists")
+                        raise ArgError("replace is set to False but an index exists")
 
                 if method == IndexMethod.ivfflat:
                     if not index_arguments:
@@ -872,8 +865,7 @@ def build_filters(json_col: Column, filters: Dict):
 
                 if operator == "$in":
                     if not isinstance(clause, list):
-                        raise FilterError(
-                            "argument to $in filter must be a list")
+                        raise FilterError("argument to $in filter must be a list")
 
                     for elem in clause:
                         if not isinstance(elem, (int, str, float)):
@@ -883,8 +875,7 @@ def build_filters(json_col: Column, filters: Dict):
 
                     # cast the array of scalars to a postgres array of jsonb so we can
                     # directly compare json types in the query
-                    contains_value = [cast(elem, postgresql.JSONB)
-                                      for elem in clause]
+                    contains_value = [cast(elem, postgresql.JSONB) for elem in clause]
                     return json_col.op("->")(key).in_(contains_value)
 
                 matches_value = cast(clause, postgresql.JSONB)

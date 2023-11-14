@@ -111,8 +111,7 @@ def test_delete(client: vecs.Client) -> None:
 
     # delete with filters
     genre_to_delete = "action"
-    deleted_ids_by_genre = movies.delete(
-        filters={"genre": {"$eq": genre_to_delete}})
+    deleted_ids_by_genre = movies.delete(filters={"genre": {"$eq": genre_to_delete}})
     assert len(deleted_ids_by_genre) > 0
 
     # bad input
@@ -125,8 +124,7 @@ def test_delete(client: vecs.Client) -> None:
 
     # bad input: should only provide either ids or filters, not both
     with pytest.raises(vecs.exc.ArgError):
-        movies.delete(ids=["vec0"], filters={
-                      "genre": {"$eq": genre_to_delete}})
+        movies.delete(ids=["vec0"], filters={"genre": {"$eq": genre_to_delete}})
 
 
 def test_repr(client: vecs.Client) -> None:
