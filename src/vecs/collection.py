@@ -159,6 +159,9 @@ class Collection:
         dimension: int,
         client: Client,
         adapter: Optional[Adapter] = None,
+        *,
+        skip_auth: bool = True,
+        user_id: Optional[str] = None,
     ):
         """
         Initializes a new instance of the `Collection` class.
@@ -177,6 +180,8 @@ class Collection:
         self.table = build_table(name, client.meta, dimension)
         self._index: Optional[str] = None
         self.adapter = adapter or Adapter(steps=[NoOp(dimension=dimension)])
+        self.skip_auth = skip_auth
+        self.user_id = user_id
 
         reported_dimensions = set(
             [
@@ -213,6 +218,7 @@ class Collection:
         """
         with self.client.Session() as sess:
             with sess.begin():
+                self._add_auth(sess)
                 stmt = select(func.count()).select_from(self.table)
                 return sess.execute(stmt).scalar() or 0
 
@@ -243,12 +249,14 @@ class Collection:
         """
         ).bindparams(name=self.name)
         with self.client.Session() as sess:
-            query_result = sess.execute(query).fetchone()
+            with sess.begin():
+                self._add_auth(sess)
+                query_result = sess.execute(query).fetchone()
 
-            if query_result:
-                _, collection_dimension = query_result
-            else:
-                collection_dimension = None
+                if query_result:
+                    _, collection_dimension = query_result
+                else:
+                    collection_dimension = None
 
         reported_dimensions = set(
             [x for x in [self.dimension, collection_dimension] if x is not None]
@@ -285,15 +293,17 @@ class Collection:
 
         unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
         with self.client.Session() as sess:
-            sess.execute(
-                text(
-                    f"""
-                    create index ix_meta_{unique_string}
-                      on vecs."{self.table.name}"
-                      using gin ( metadata jsonb_path_ops )
-                    """
+            with sess.begin():
+                self._add_auth(sess)
+                sess.execute(
+                    text(
+                        f"""
+                        create index ix_meta_{unique_string}
+                          on vecs."{self.table.name}"
+                          using gin ( metadata jsonb_path_ops )
+                        """
+                    )
                 )
-            )
         return self
 
     def _drop(self):
@@ -309,8 +319,10 @@ class Collection:
         from sqlalchemy.schema import DropTable
 
         with self.client.Session() as sess:
-            sess.execute(DropTable(self.table, if_exists=True))
-            sess.commit()
+            with sess.begin():
+                self._add_auth(sess)
+                sess.execute(DropTable(self.table, if_exists=True))
+                sess.commit()
 
         return self
 
@@ -341,6 +353,7 @@ class Collection:
 
         with self.client.Session() as sess:
             with sess.begin():
+                self._add_auth(sess)
                 for chunk in pipeline:
                     stmt = postgresql.insert(self.table).values(chunk)
                     stmt = stmt.on_conflict_do_update(
@@ -369,6 +382,7 @@ class Collection:
         records = []
         with self.client.Session() as sess:
             with sess.begin():
+                self._add_auth(sess)
                 for id_chunk in flu(ids).chunk(chunk_size):
                     stmt = select(self.table).where(self.table.c.id.in_(id_chunk))
                     chunk_records = sess.execute(stmt)
@@ -394,6 +408,7 @@ class Collection:
         ids = []
         with self.client.Session() as sess:
             with sess.begin():
+                self._add_auth(sess)
                 for id_chunk in flu(del_ids).chunk(chunk_size):
                     stmt = (
                         delete(self.table)
@@ -533,12 +548,29 @@ class Collection:
                             ef_search=ef_search
                         )
                     )
+                self._add_auth(sess)
                 if len(cols) == 1:
                     return [str(x) for x in sess.scalars(stmt).fetchall()]
                 return sess.execute(stmt).fetchall() or []
 
+    def _add_auth(self, sess):
+        if not self.skip_auth:
+            if self.user_id:
+                sess.execute(
+                            text("set local request.jwt.claim.sub = :user_id").bindparams(
+                                user_id=self.user_id
+                            )
+                        )
+                sess.execute(
+                            text("set local role authenticated;")
+                        )
+            else:
+                sess.execute(
+                            text("set local role anon;")
+                        )
+
     @classmethod
-    def _list_collections(cls, client: "Client") -> List["Collection"]:
+    def _list_collections(cls, client: "Client", skip_auth: bool = True, user_id: Optional[str] = None) -> List["Collection"]:
         """
         PRIVATE
 
@@ -570,7 +602,7 @@ class Collection:
         xc = []
         with client.Session() as sess:
             for name, dimension in sess.execute(query):
-                existing_collection = cls(name, dimension, client)
+                existing_collection = cls(name, dimension, client, skip_auth=skip_auth, user_id=user_id)
                 xc.append(existing_collection)
         return xc
 
@@ -734,6 +766,7 @@ class Collection:
 
         with self.client.Session() as sess:
             with sess.begin():
+                self._add_auth(sess)
                 if self.index is not None:
                     if replace:
                         sess.execute(text(f'drop index vecs."{self.index}";'))
