@@ -1,3 +1,4 @@
+import itertools
 import random
 
 import numpy as np
@@ -91,11 +92,14 @@ def test_delete(client: vecs.Client) -> None:
             f"vec{ix}",
             vec,
             {
-                "genre": random.choice(["action", "rom-com", "drama"]),
+                "genre": genre,
                 "year": int(50 * random.random()) + 1970,
             },
         )
-        for ix, vec in enumerate(np.random.random((n_records, dim)))
+        for (ix, vec), genre in zip(
+            enumerate(np.random.random((n_records, dim))),
+            itertools.cycle(["action", "rom-com", "drama"]),
+        )
     ]
 
     # insert works
@@ -112,7 +116,7 @@ def test_delete(client: vecs.Client) -> None:
     # delete with filters
     genre_to_delete = "action"
     deleted_ids_by_genre = movies.delete(filters={"genre": {"$eq": genre_to_delete}})
-    assert len(deleted_ids_by_genre) > 0
+    assert len(deleted_ids_by_genre) == 34
 
     # bad input
     with pytest.raises(vecs.exc.ArgError):

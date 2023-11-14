@@ -536,8 +536,8 @@ class Collection:
         stmt = select(*cols)
         if filters:
             stmt = stmt.filter(
-                build_filters(self.table.c.metadata, filters)
-            )  # type: ignore
+                build_filters(self.table.c.metadata, filters)  # type: ignore
+            )
 
         stmt = stmt.order_by(distance_clause)
         stmt = stmt.limit(limit)
