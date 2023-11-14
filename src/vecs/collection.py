@@ -403,18 +403,22 @@ class Collection:
 
         with self.client.Session() as sess:
             with sess.begin():
-                for id_chunk in flu(ids).chunk(12):
-                    stmt = (
-                        delete(self.table)
-                        .where(self.table.c.id.in_(id_chunk))
-                        .returning(self.table.c.id)
-                    )
-                    del_ids.extend(sess.execute(stmt).scalars() or [])
+                if ids:
+                    for id_chunk in flu(ids).chunk(12):
+                        stmt = (
+                            delete(self.table)
+                            .where(self.table.c.id.in_(id_chunk))
+                            .returning(self.table.c.id)
+                        )
+                        del_ids.extend(sess.execute(stmt).scalars() or [])
 
-                meta_filter = build_filters(self.table.c.metadata, filters)
-                stmt = delete(self.table).where(meta_filter).returning(self.table.c.id)
-                result = sess.execute(stmt)
-                del_ids.extend([row[0] for row in result.fetchall()])
+                if filters:
+                    meta_filter = build_filters(self.table.c.metadata, filters)
+                    stmt = (
+                        delete(self.table).where(meta_filter).returning(self.table.c.id)  # type: ignore
+                    )
+                    result = sess.execute(stmt)
+                    del_ids.extend([row[0] for row in result.fetchall()])
 
         return del_ids
 
