@@ -66,7 +66,7 @@ Deleting records removes them from the collection. To delete records, specify a 
 
 ```python
 docs.delete(ids=["vec0", "vec1"])
-# or delete with filters
+# or delete by a metadata filter
 docs.delete(filters={"year": {"$eq": 2012}})
 ```
 
