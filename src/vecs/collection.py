@@ -382,8 +382,8 @@ class Collection:
         Deletes vectors from the collection by matching filters or ids.
 
         Args:
-            ids (Iterable[str]): An iterable of vector identifiers.
-            filters (Metadata): A dictionary of metadata key-value pairs to match.
+            ids (Iterable[str], optional): An iterable of vector identifiers.
+            filters (Optional[Dict], optional): Filters to apply to the search. Defaults to None.
 
         Returns:
             List[str]: A list of the identifiers of the deleted vectors.
