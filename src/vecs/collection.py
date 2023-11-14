@@ -557,20 +557,18 @@ class Collection:
         if not self.skip_auth:
             if self.user_id:
                 sess.execute(
-                            text("set local request.jwt.claim.sub = :user_id").bindparams(
-                                user_id=self.user_id
-                            )
-                        )
-                sess.execute(
-                            text("set local role authenticated;")
-                        )
+                    text("set local request.jwt.claim.sub = :user_id").bindparams(
+                        user_id=self.user_id
+                    )
+                )
+                sess.execute(text("set local role authenticated;"))
             else:
-                sess.execute(
-                            text("set local role anon;")
-                        )
+                sess.execute(text("set local role anon;"))
 
     @classmethod
-    def _list_collections(cls, client: "Client", skip_auth: bool = True, user_id: Optional[str] = None) -> List["Collection"]:
+    def _list_collections(
+        cls, client: "Client", skip_auth: bool = True, user_id: Optional[str] = None
+    ) -> List["Collection"]:
         """
         PRIVATE
 
@@ -602,7 +600,9 @@ class Collection:
         xc = []
         with client.Session() as sess:
             for name, dimension in sess.execute(query):
-                existing_collection = cls(name, dimension, client, skip_auth=skip_auth, user_id=user_id)
+                existing_collection = cls(
+                    name, dimension, client, skip_auth=skip_auth, user_id=user_id
+                )
                 xc.append(existing_collection)
         return xc
 

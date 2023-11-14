@@ -47,7 +47,12 @@ class Client:
         vx.disconnect()
     """
 
-    def __init__(self, connection_string: str, skip_auth: bool = True, user_id: Optional[str] = None):
+    def __init__(
+        self,
+        connection_string: str,
+        skip_auth: bool = True,
+        user_id: Optional[str] = None,
+    ):
         """
         Initialize a Client instance.
 
@@ -62,7 +67,7 @@ class Client:
         self.user_id = user_id
         self.meta = MetaData(schema="vecs")
         self.Session = sessionmaker(self.engine)
-        
+
         if not self.skip_auth:
             return
 
@@ -141,7 +146,9 @@ class Client:
         """
         from vecs.collection import Collection
 
-        return Collection(name, dimension, self, skip_auth=self.skip_auth, user_id=self.user_id)._create()
+        return Collection(
+            name, dimension, self, skip_auth=self.skip_auth, user_id=self.user_id
+        )._create()
 
     @deprecated("use Client.get_or_create_collection")
     def get_collection(self, name: str) -> Collection:
@@ -200,7 +207,9 @@ class Client:
         """
         from vecs.collection import Collection
 
-        return Collection._list_collections(self, skip_auth=self.skip_auth, user_id=self.user_id)
+        return Collection._list_collections(
+            self, skip_auth=self.skip_auth, user_id=self.user_id
+        )
 
     def delete_collection(self, name: str) -> None:
         """
@@ -216,7 +225,9 @@ class Client:
         """
         from vecs.collection import Collection
 
-        Collection(name, -1, self, skip_auth=self.skip_auth, user_id=self.user_id)._drop()
+        Collection(
+            name, -1, self, skip_auth=self.skip_auth, user_id=self.user_id
+        )._drop()
         return
 
     def disconnect(self) -> None:
