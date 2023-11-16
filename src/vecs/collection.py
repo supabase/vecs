@@ -321,9 +321,12 @@ class Collection:
         Inserts or updates *vectors* records in the collection.
 
         Args:
-            records (Iterable[Tuple[str, Any, Metadata]]): An iterable of vectors to upsert.
-                Each vector is represented as a tuple where the first element is a unique string identifier,
-                the second element is an iterable of numeric values, and the third element is metadata associated with the vector.
+            records (Iterable[Tuple[str, Any, Metadata]]): An iterable of content to upsert.
+                Each record is a tuple where:
+                  - the first element is a unique string identifier
+                  - the second element is an iterable of numeric values or relevant input type for the
+                    adapter assigned to the collection
+                  - the third element is metadata associated with the vector
 
             skip_adapter (bool): Should the adapter be skipped while upserting. i.e. if vectors are being
                 provided, rather than a media type that needs to be transformed
