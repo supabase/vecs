@@ -155,7 +155,7 @@ class Collection:
     Note: Some methods of this class can raise exceptions from the `vecs.exc` module if errors occur.
     """
 
-    _user_id: str | None = None
+    _user_id: str = None
     """
     PRIVATE
 
@@ -208,8 +208,7 @@ class Collection:
                 "Dimensions reported by adapter, dimension, and collection do not match"
             )
 
-        if user_id:
-            self.set_user(user_id)
+        self.set_user(user_id)
 
     def __repr__(self):
         """
@@ -607,6 +606,12 @@ class Collection:
             None
         """
         self._user_id = user_id
+        if not self._user_id:
+            self.user_email = None
+            self.user_role = None
+            self.user_app_metadata = None
+            return
+
         with self.client.Session() as sess:
             with sess.begin():
                 user = sess.execute(

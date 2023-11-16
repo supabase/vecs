@@ -24,7 +24,7 @@ __all__ = [
 
 
 def create_client(
-    connection_string: str, *, skip_auth: bool = True, user_id: str | None = None
+    connection_string: str, *, skip_auth: bool = True, user_id: str = None
 ) -> Client:
     """Creates a client from a Postgres connection string"""
     return Client(connection_string, skip_auth=skip_auth, user_id=user_id)

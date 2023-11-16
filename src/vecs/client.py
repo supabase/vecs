@@ -68,6 +68,7 @@ class Client:
         self.skip_auth = skip_auth
         self.meta = MetaData(schema="vecs")
         self.Session = sessionmaker(self.engine)
+        self.set_user(user_id)
 
         if not self.skip_auth:
             with self.Session() as sess:
@@ -77,8 +78,6 @@ class Client:
                             "select installed_version from pg_available_extensions where name = 'vector' limit 1;"
                         )
                     ).scalar_one()
-            if user_id:
-                self.set_user(user_id)
 
         with self.Session() as sess:
             with sess.begin():
@@ -260,6 +259,8 @@ class Client:
             None
         """
         self._user_id = user_id
+        if not self._user_id:
+            return
         with self.Session() as sess:
             with sess.begin():
                 user = sess.execute(
