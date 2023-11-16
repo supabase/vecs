@@ -460,7 +460,7 @@ class Collection:
         The return type is dependent on arguments *include_value* and *include_metadata*
 
         Args:
-            query_vector (Any): The vector to use as the query.
+            data (Any): The vector to use as the query.
             limit (int, optional): The maximum number of results to return. Defaults to 10.
             filters (Optional[Dict], optional): Filters to apply to the search. Defaults to None.
             measure (Union[IndexMeasure, str], optional): The distance measure to use for the search. Defaults to 'cosine_distance'.
