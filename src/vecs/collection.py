@@ -321,7 +321,7 @@ class Collection:
         Inserts or updates *vectors* records in the collection.
 
         Args:
-            vectors (Iterable[Tuple[str, Any, Metadata]]): An iterable of vectors to upsert.
+            records (Iterable[Tuple[str, Any, Metadata]]): An iterable of vectors to upsert.
                 Each vector is represented as a tuple where the first element is a unique string identifier,
                 the second element is an iterable of numeric values, and the third element is metadata associated with the vector.
 
