@@ -7,6 +7,7 @@ All public classes, enums, and functions are re-exported by the top level `vecs`
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, List, Optional
 
 from deprecated import deprecated
@@ -50,6 +51,7 @@ class Client:
     def __init__(
         self,
         connection_string: str,
+        *,
         skip_auth: bool = True,
         user_id: Optional[str] = None,
     ):
@@ -64,12 +66,19 @@ class Client:
         """
         self.engine = create_engine(connection_string)
         self.skip_auth = skip_auth
-        self.user_id = user_id
         self.meta = MetaData(schema="vecs")
         self.Session = sessionmaker(self.engine)
 
         if not self.skip_auth:
-            return
+            with self.Session() as sess:
+                with sess.begin():
+                    self.vector_version: str = sess.execute(
+                        text(
+                            "select installed_version from pg_available_extensions where name = 'vector' limit 1;"
+                        )
+                    ).scalar_one()
+            if user_id:
+                self.set_user(user_id)
 
         with self.Session() as sess:
             with sess.begin():
@@ -124,7 +133,7 @@ class Client:
             client=self,
             adapter=adapter,
             skip_auth=self.skip_auth,
-            user_id=self.user_id,
+            user_id=self._user_id,
         )
 
         return collection._create_if_not_exists()
@@ -147,7 +156,7 @@ class Client:
         from vecs.collection import Collection
 
         return Collection(
-            name, dimension, self, skip_auth=self.skip_auth, user_id=self.user_id
+            name, dimension, self, skip_auth=self.skip_auth, user_id=self._user_id
         )._create()
 
     @deprecated("use Client.get_or_create_collection")
@@ -195,7 +204,7 @@ class Client:
                 dimension,
                 self,
                 skip_auth=self.skip_auth,
-                user_id=self.user_id,
+                user_id=self._user_id,
             )
 
     def list_collections(self) -> List["Collection"]:
@@ -208,7 +217,7 @@ class Client:
         from vecs.collection import Collection
 
         return Collection._list_collections(
-            self, skip_auth=self.skip_auth, user_id=self.user_id
+            self, skip_auth=self.skip_auth, user_id=self._user_id
         )
 
     def delete_collection(self, name: str) -> None:
@@ -226,7 +235,7 @@ class Client:
         from vecs.collection import Collection
 
         Collection(
-            name, -1, self, skip_auth=self.skip_auth, user_id=self.user_id
+            name, -1, self, skip_auth=self.skip_auth, user_id=self._user_id
         )._drop()
         return
 
@@ -238,6 +247,29 @@ class Client:
             None
         """
         self.engine.dispose()
+        return
+
+    def set_user(self, user_id: str) -> None:
+        """
+        Set the user id for the client.
+
+        Args:
+            user_id (str): The user id to set.
+
+        Returns:
+            None
+        """
+        self._user_id = user_id
+        with self.Session() as sess:
+            with sess.begin():
+                user = sess.execute(
+                    text(
+                        "select role, email, raw_app_meta_data from auth.users where id = :user_id"
+                    ).bindparams(user_id=self._user_id)
+                ).fetchone()
+                if not user:
+                    self._user_id = None
+                    logging.error(f"User {user_id} not found")
         return
 
     def __enter__(self) -> "Client":

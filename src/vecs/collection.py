@@ -6,6 +6,8 @@ All public classes, enums, and functions are re-exported by the top level `vecs`
 """
 from __future__ import annotations
 
+import json
+import logging
 import math
 import uuid
 import warnings
@@ -153,6 +155,13 @@ class Collection:
     Note: Some methods of this class can raise exceptions from the `vecs.exc` module if errors occur.
     """
 
+    _user_id: str | None = None
+    """
+    PRIVATE
+
+    Defines the user id for the client if set. Do not set directly, use `set_user` instead.
+    """
+
     def __init__(
         self,
         name: str,
@@ -181,7 +190,6 @@ class Collection:
         self._index: Optional[str] = None
         self.adapter = adapter or Adapter(steps=[NoOp(dimension=dimension)])
         self.skip_auth = skip_auth
-        self.user_id = user_id
 
         reported_dimensions = set(
             [
@@ -199,6 +207,9 @@ class Collection:
             raise MismatchedDimension(
                 "Dimensions reported by adapter, dimension, and collection do not match"
             )
+
+        if user_id:
+            self.set_user(user_id)
 
     def __repr__(self):
         """
@@ -325,6 +336,38 @@ class Collection:
                 sess.commit()
 
         return self
+
+    def create_rls_policies(self) -> None:
+        """
+        Creates a simple row level security policy for the collection.
+
+        Returns:
+            None
+        """
+        with self.client.Session() as sess:
+            with sess.begin():
+                self._add_auth(sess)
+                sess.execute(
+                    text("grant all on vecs." + self.table.name + " to authenticated")
+                )
+                sess.execute(text("grant all on vecs." + self.table.name + " to anon"))
+                sess.execute(
+                    text(
+                        "alter table vecs."
+                        + self.table.name
+                        + " enable row level security"
+                    )
+                )
+                sess.execute(
+                    text(
+                        f"""
+                        create policy {self.table.name}_rls_all on vecs."{self.table.name}"
+                        using ((auth.uid())::text = (metadata ->> 'uid'::text))
+                        with check ((auth.uid())::text = (metadata ->> 'uid'::text))
+                        """
+                    )
+                )
+        return None
 
     def upsert(
         self, records: Iterable[Tuple[str, Any, Metadata]], skip_adapter: bool = False
@@ -553,17 +596,61 @@ class Collection:
                     return [str(x) for x in sess.scalars(stmt).fetchall()]
                 return sess.execute(stmt).fetchall() or []
 
+    def set_user(self, user_id: str) -> None:
+        """
+        Set the user id for the client.
+
+        Args:
+            user_id (str): The user id to set.
+
+        Returns:
+            None
+        """
+        self._user_id = user_id
+        with self.client.Session() as sess:
+            with sess.begin():
+                user = sess.execute(
+                    text(
+                        "select role, email, raw_app_meta_data from auth.users where id = :user_id"
+                    ).bindparams(user_id=self._user_id)
+                ).fetchone()
+                if user:
+                    self.user_email = user.email
+                    self.user_role = user.role
+                    self.user_app_metadata = user.raw_app_meta_data
+                else:
+                    self._user_id = None
+                    self.user_email = None
+                    self.user_role = None
+                    self.user_app_metadata = None
+                    logging.error(f"User {user_id} not found")
+
     def _add_auth(self, sess):
         if not self.skip_auth:
-            if self.user_id:
+            if self._user_id:
                 sess.execute(
                     text("set local request.jwt.claim.sub = :user_id").bindparams(
-                        user_id=self.user_id
+                        user_id=self._user_id
                     )
                 )
-                sess.execute(text("set local role authenticated;"))
+                sess.execute(
+                    text("set local role :role").bindparams(role=self.user_role)
+                )
+                sess.execute(
+                    text("set local request.jwt.claim.email = :email").bindparams(
+                        email=self.user_email
+                    )
+                )
+                sess.execute(
+                    text("set local request.jwt.claims = :claims").bindparams(
+                        claims=json.dumps({"app_metadata": self.user_app_metadata})
+                    )
+                )
+                sess.execute(
+                    text("set local role :role").bindparams(role=self.user_role)
+                )
             else:
-                sess.execute(text("set local role anon;"))
+                sess.execute(text("set local role anon"))
 
     @classmethod
     def _list_collections(
