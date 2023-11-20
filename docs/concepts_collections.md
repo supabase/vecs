@@ -15,11 +15,12 @@ Record (
 ```
 
 For example:
+
 ```python
 ("vec1", [0.1, 0.2, 0.3], {"year": 1990})
 ```
 
-Underneath every `vecs` a collection is Postgres table
+Underneath every `vecs` collection is a Postgres table
 
 ```sql
 create table <collection_name> (
@@ -28,6 +29,7 @@ create table <collection_name> (
     metadata jsonb
 )
 ```
+
 where rows in the table map 1:1 with vecs vector records.
 
 It is safe to select collection tables from outside the vecs client but issuing DDL is not recommended.
