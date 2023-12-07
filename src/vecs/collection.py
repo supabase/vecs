@@ -235,7 +235,7 @@ class Collection:
             join pg_attribute pa
                 on pc.oid = pa.attrelid
         where
-            pc.relnamespace = 'vecs'::regnamespace
+            pc.relnamespace = '{self.client.schema}'::regnamespace
             and pc.relkind = 'r'
             and pa.attname = 'vec'
             and not pc.relname ^@ '_'
@@ -289,7 +289,7 @@ class Collection:
                 text(
                     f"""
                     create index ix_meta_{unique_string}
-                      on vecs."{self.table.name}"
+                      on {self.client.schema}."{self.table.name}"
                       using gin ( metadata jsonb_path_ops )
                     """
                 )
@@ -576,7 +576,7 @@ class Collection:
         """
 
         query = text(
-            """
+            f"""
         select
             relname as table_name,
             atttypmod as embedding_dim
@@ -585,7 +585,7 @@ class Collection:
             join pg_attribute pa
                 on pc.oid = pa.attrelid
         where
-            pc.relnamespace = 'vecs'::regnamespace
+            pc.relnamespace = '{client.schema}'::regnamespace
             and pc.relkind = 'r'
             and pa.attname = 'vec'
             and not pc.relname ^@ '_'
@@ -636,13 +636,13 @@ class Collection:
 
         if self._index is None:
             query = text(
-                """
+                f"""
             select
                 relname as table_name
             from
                 pg_class pc
             where
-                pc.relnamespace = 'vecs'::regnamespace
+                pc.relnamespace = '{self.client.schema}'::regnamespace
                 and relname ilike 'ix_vector%'
                 and pc.relkind = 'i'
             """
@@ -760,7 +760,7 @@ class Collection:
             with sess.begin():
                 if self.index is not None:
                     if replace:
-                        sess.execute(text(f'drop index vecs."{self.index}";'))
+                        sess.execute(text(f'drop index "{self.client.schema}"."{self.index}";'))
                         self._index = None
                     else:
                         raise ArgError("replace is set to False but an index exists")
@@ -787,7 +787,7 @@ class Collection:
                         text(
                             f"""
                             create index ix_{ops}_ivfflat_nl{n_lists}_{unique_string}
-                              on vecs."{self.table.name}"
+                              on {self.client.schema}."{self.table.name}"
                               using ivfflat (vec {ops}) with (lists={n_lists})
                             """
                         )
@@ -806,7 +806,7 @@ class Collection:
                         text(
                             f"""
                             create index ix_{ops}_hnsw_m{m}_efc{ef_construction}_{unique_string}
-                              on vecs."{self.table.name}"
+                              on {self.client.schema}."{self.table.name}"
                               using hnsw (vec {ops}) WITH (m={m}, ef_construction={ef_construction});
                             """
                         )

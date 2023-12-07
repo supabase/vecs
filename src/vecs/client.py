@@ -47,23 +47,24 @@ class Client:
         vx.disconnect()
     """
 
-    def __init__(self, connection_string: str):
+    def __init__(self, connection_string: str, schema: str):
         """
         Initialize a Client instance.
 
         Args:
             connection_string (str): A string representing the database connection information.
-
+            schema (str): A string representing the database schema to connect to.
         Returns:
             None
         """
+        self.schema = schema
         self.engine = create_engine(connection_string)
-        self.meta = MetaData(schema="vecs")
+        self.meta = MetaData(schema=self.schema)
         self.Session = sessionmaker(self.engine)
 
         with self.Session() as sess:
             with sess.begin():
-                sess.execute(text("create schema if not exists vecs;"))
+                sess.execute(text(f"create schema if not exists {self.schema};"))
                 sess.execute(text("create extension if not exists vector;"))
                 self.vector_version: str = sess.execute(
                     text(
@@ -105,7 +106,7 @@ class Client:
             CollectionAlreadyExists: If a collection with the same name already exists
         """
         from vecs.collection import Collection
-
+        
         adapter_dimension = adapter.exported_dimension if adapter else None
 
         collection = Collection(
@@ -162,7 +163,7 @@ class Client:
             join pg_attribute pa
                 on pc.oid = pa.attrelid
         where
-            pc.relnamespace = 'vecs'::regnamespace
+            pc.relnamespace = '{self.schema}'::regnamespace
             and pc.relkind = 'r'
             and pa.attname = 'vec'
             and not pc.relname ^@ '_'

@@ -1,7 +1,12 @@
 import pytest
-
 import vecs
 
+def test_create_client(clean_db) -> None:
+    client = vecs.create_client(clean_db)
+    assert client.schema == "vecs"
+
+    client = vecs.create_client(clean_db, "my_schema")
+    assert client.schema == "my_schema"
 
 def test_extracts_vector_version(client: vecs.Client) -> None:
     # pgvector version is sucessfully extracted
