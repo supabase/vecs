@@ -9,12 +9,12 @@ from vecs.collection import (
 )
 
 __project__ = "vecs"
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 
 __all__ = [
     "IndexArgsIVFFlat",
-    "IndexArgsHSNW",
+    "IndexArgsHNSW",
     "IndexMethod",
     "IndexMeasure",
     "Collection",
