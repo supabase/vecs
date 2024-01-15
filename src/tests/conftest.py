@@ -15,6 +15,7 @@ import vecs
 PYTEST_DB = "postgresql://postgres:password@localhost:5611/vecs_db"
 PYTEST_SCHEMA = "test_schema"
 
+
 @pytest.fixture(scope="session")
 def maybe_start_pg() -> Generator[None, None, None]:
     """Creates a postgres 15 docker container that can be connected
@@ -94,6 +95,7 @@ def maybe_start_pg() -> Generator[None, None, None]:
 def clean_db(maybe_start_pg: None) -> Generator[str, None, None]:
     eng = create_engine(PYTEST_DB)
     with eng.begin() as connection:
+        connection.execute(text("drop schema if exists vecs cascade;"))
         connection.execute(text(f"drop schema if exists {PYTEST_SCHEMA} cascade;"))
     yield PYTEST_DB
     eng.dispose()
@@ -101,5 +103,5 @@ def clean_db(maybe_start_pg: None) -> Generator[str, None, None]:
 
 @pytest.fixture(scope="function")
 def client(clean_db: str) -> Generator[vecs.Client, None, None]:
-    client_ = vecs.create_client(clean_db, PYTEST_SCHEMA)
+    client_ = vecs.create_client(clean_db)
     yield client_
