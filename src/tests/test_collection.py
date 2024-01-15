@@ -815,3 +815,69 @@ def test_hnsw_unavailable_error(client: vecs.Client) -> None:
     bar = client.get_or_create_collection(name="bar", dimension=dim)
     with pytest.raises(ArgError):
         bar.create_index(method=IndexMethod.hnsw)
+
+
+def test_get_or_create_with_schema(client: vecs.Client):
+    """
+    Test that get_or_create_collection works when specifying custom schema
+    """
+
+    dim = 384
+
+    collection_1 = client.get_or_create_collection(
+        name="collection_1", schema="test_schema", dimension=dim
+    )
+    collection_2 = client.get_or_create_collection(
+        name="collection_1", schema="test_schema", dimension=dim
+    )
+
+    assert collection_1.schema == "test_schema"
+    assert collection_1.schema == collection_2.schema
+    assert collection_1.name == collection_2.name
+
+
+def test_upsert_with_schema(client: vecs.Client) -> None:
+    n_records = 100
+    dim = 384
+
+    movies1 = client.get_or_create_collection(
+        name="ping", schema="test_schema", dimension=dim
+    )
+    movies2 = client.get_or_create_collection(name="ping", schema="vecs", dimension=dim)
+
+    # collection initially empty
+    assert len(movies1) == 0
+    assert len(movies2) == 0
+
+    records = [
+        (
+            f"vec{ix}",
+            vec,
+            {
+                "genre": random.choice(["action", "rom-com", "drama"]),
+                "year": int(50 * random.random()) + 1970,
+            },
+        )
+        for ix, vec in enumerate(np.random.random((n_records, dim)))
+    ]
+
+    # insert works
+    movies1.upsert(records)
+    assert len(movies1) == n_records
+
+    movies2.upsert(records)
+    assert len(movies2) == n_records
+
+    # upserting overwrites
+    new_record = ("vec0", np.zeros(384), {})
+    movies1.upsert([new_record])
+    db_record = movies1["vec0"]
+    db_record[0] == new_record[0]
+    db_record[1] == new_record[1]
+    db_record[2] == new_record[2]
+
+    movies2.upsert([new_record])
+    db_record = movies2["vec0"]
+    db_record[0] == new_record[0]
+    db_record[1] == new_record[1]
+    db_record[2] == new_record[2]
