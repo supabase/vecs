@@ -68,6 +68,8 @@
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../integrations_openai/">OpenAI</a>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../integrations_bedrock/">Bedrock</a>
+                  </li>
                   <li class="toctree-l1"><a class="reference internal" href="../integrations_huggingface_inference_endpoints/">HuggingFace Inference Endpoints</a>
                   </li>
               </ul>
@@ -112,17 +114,17 @@ Collections can be <a href="../api/#query">queried</a> at any time, but should b
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">metadata</span><span class="p">:</span> <span class="n">JSON</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span>
 </span></code></pre></div>
-<p>For example:
+<p>For example:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">(</span><span class="s2">&quot;vec1&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">1990</span><span class="p">})</span>
-</span></code></pre></div></p>
-<p>Underneath every <code>vecs</code> a collection is Postgres table</p>
-<p><div class="language-sql highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">create</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="o">&lt;</span><span class="n">collection_name</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span>
+</span></code></pre></div>
+<p>Underneath every <code>vecs</code> collection is a Postgres table</p>
+<div class="language-sql highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">create</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="o">&lt;</span><span class="n">collection_name</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="k">primary</span><span class="w"> </span><span class="k">key</span><span class="p">,</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">vec</span><span class="w"> </span><span class="n">vector</span><span class="p">(</span><span class="o">&lt;</span><span class="n">dimension</span><span class="o">&gt;</span><span class="p">),</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">metadata</span><span class="w"> </span><span class="n">jsonb</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">)</span>
 </span></code></pre></div>
-where rows in the table map 1:1 with vecs vector records.</p>
+<p>where rows in the table map 1:1 with vecs vector records.</p>
 <p>It is safe to select collection tables from outside the vecs client but issuing DDL is not recommended.</p>
               
             </div>
