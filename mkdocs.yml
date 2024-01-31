@@ -24,6 +24,7 @@ nav:
     - Metadata: concepts_metadata.md
   - Integrations:
     - OpenAI: integrations_openai.md
+    - Bedrock: integrations_bedrock.md
     - HuggingFace Inference Endpoints: integrations_huggingface_inference_endpoints.md
   - Support:
     - Changelog: support_changelog.md
