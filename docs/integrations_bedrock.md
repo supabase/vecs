@@ -84,7 +84,7 @@ sentences.create_index()
 
 ### Querying for Most Similar Sentences
 
-Now, we query the sentences collection to find the most similar sentences a sample query sentence. First need to create an embedding for the query sentence. Next, we query from the collection we created earlier to find the most similar sentences.
+Now, we query the `sentences` collection to find the most similar sentences to a sample query sentence. First need to create an embedding for the query sentence. Next, we query the collection we created earlier to find the most similar sentences.
 
 ```python
 query_sentence = "A quick animal jumps over a lazy one."
