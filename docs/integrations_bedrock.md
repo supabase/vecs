@@ -116,7 +116,7 @@ for result in results:
     print(result)
 ```
 
-Returns the most similar 3 records and their distance to the query vector.
+This returns the most similar 3 records and their distance to the query vector.
 ```
 ('The quick brown fox jumps over the lazy dog.', 0.27600620558852)
 ('The cat sat on the mat.', 0.609986272479202)
