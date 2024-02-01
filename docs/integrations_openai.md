@@ -4,7 +4,7 @@ This guide will walk you through an example integration of the OpenAI API with t
 
 ## Create an Environment
 
-First, you need to set up your environment. You will need Python 3.7 with the `vecs` and `openai` libraries installed.
+First, you need to set up your environment. You will need Python 3.7+ with the `vecs` and `openai` libraries installed.
 
 You can install the necessary Python libraries using pip:
 
