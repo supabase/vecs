@@ -1,4 +1,4 @@
-# Integration: AWS Bedrock
+# Integration: Amazon Bedrock
 
 This guide will walk you through an example using Amazon Bedrock SDK with `vecs`. We will create embeddings using the Amazon Titan Embeddings G1 – Text v1.2 (amazon.titan-embed-text-v1) model, insert these embeddings into a PostgreSQL database using vecs, and then query the collection to find the most similar sentences to a given query sentence.
 
