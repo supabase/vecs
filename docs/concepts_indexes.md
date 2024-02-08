@@ -52,7 +52,7 @@ To manually specify `method`, `measure`, and `index_arguments` add them as argum
 docs.create_index(
     method=IndexMethod.hnsw,
     measure=IndexMeasure.cosine_distance,
-    measure=IndexArgsHNSW(m=8),
+    index_arguments=IndexArgsHNSW(m=8),
 )
 ```
 
