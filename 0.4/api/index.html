@@ -216,7 +216,7 @@ However, for good throughput, the collection should be indexed after records hav
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">docs</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">method</span><span class="o">=</span><span class="n">IndexMethod</span><span class="o">.</span><span class="n">hnsw</span><span class="p">,</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">measure</span><span class="o">=</span><span class="n">IndexMeasure</span><span class="o">.</span><span class="n">cosine_distance</span><span class="p">,</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">measure</span><span class="o">=</span><span class="n">IndexArgsHNSW</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">index_arguments</span><span class="o">=</span><span class="n">IndexArgsHNSW</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">)</span>
 </span></code></pre></div>
 <div class="admonition note">
