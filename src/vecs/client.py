@@ -81,8 +81,8 @@ class Client:
     def get_or_create_collection(
         self,
         name: str,
-        schema: str = "vecs",
         *,
+        schema: str = "vecs",
         dimension: Optional[int] = None,
         adapter: Optional[Adapter] = None,
     ) -> Collection:
@@ -182,7 +182,7 @@ class Client:
                 self,
             )
 
-    def list_collections(self, schema: str = "vecs") -> List["Collection"]:
+    def list_collections(self, *, schema: str = "vecs") -> List["Collection"]:
         """
         List all vector collections by database schema.
 
@@ -193,7 +193,7 @@ class Client:
 
         return Collection._list_collections(self, schema)
 
-    def delete_collection(self, name: str, schema: str = "vecs") -> None:
+    def delete_collection(self, name: str, *, schema: str = "vecs") -> None:
         """
         Delete a vector collection.
 
@@ -201,6 +201,7 @@ class Client:
 
         Args:
             name (str): The name of the collection.
+            schema (str): Optional, the database schema. Defaults to `vecs`.
 
         Returns:
             None
