@@ -175,7 +175,10 @@ class Collection:
         self.client = client
         self.name = name
         self.dimension = dimension
-        self.schema = schema
+        self._schema = schema
+        self.schema = self.client.engine.dialect.identifier_preparer.quote_schema(
+            self._schema
+        )
         self.meta = MetaData(schema=self.schema)
         self.table = build_table(name, self.meta, dimension)
         self._index: Optional[str] = None
