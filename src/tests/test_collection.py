@@ -577,6 +577,55 @@ def test_filters_in(client: vecs.Client) -> None:
         )
 
 
+def test_filters_contains(client: vecs.Client) -> None:
+    bar = client.get_or_create_collection(name="bar", dimension=4)
+
+    records = [
+        ("0", [0, 0, 0, 0], {"a": 1, "b": 2}),
+        ("1", [1, 0, 0, 0], {"a": [1, 2, 3]}),
+        ("2", [1, 1, 0, 0], {"a": {"1": "2"}}),
+        ("3", [0, 0, 0, 0], {"a": "1"}),
+    ]
+
+    bar.upsert(records)
+    bar.create_index()
+
+    # Test $contains operator for int value
+    assert bar.query(
+        data=[0, 0, 0, 0],
+        limit=3,
+        filters={"a": {"$contains": 1}},
+    ) == ["0", "1"]
+
+    # Test $contains operator for list value
+    assert bar.query(
+        data=[1, 0, 0, 0],
+        limit=3,
+        filters={"a": {"$contains": [1, 2, 3]}},
+    ) == ["1"]
+
+    # Test $contains operator for dictionary value
+    assert bar.query(
+        data=[1, 1, 0, 0],
+        limit=3,
+        filters={"a": {"$contains": {"1": "2"}}},
+    ) == ["2"]
+
+    # Test $contains operator for string value
+    assert bar.query(
+        data=[0, 0, 0, 0],
+        limit=3,
+        filters={"a": {"$contains": "1"}},
+    ) == ["3"]
+
+    # Test $contains operator for non-existent value
+    assert bar.query(
+        data=[0, 0, 0, 0],
+        limit=3,
+        filters={"a": {"$contains": 5}},
+    ) == []
+
+
 def test_access_index(client: vecs.Client) -> None:
     dim = 4
     bar = client.get_or_create_collection(name="bar", dimension=dim)

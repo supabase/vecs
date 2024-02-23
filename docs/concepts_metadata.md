@@ -33,6 +33,7 @@ Comparison operators compare a provided value with a value stored in metadata fi
 | $lt       | Matches values that are less than a specified value |
 | $lte      | Matches values that are less than or equal to a specified value |
 | $in       | Matches values that are contained by scalar list of specified values |
+| $contains | Matches values where a specified value is contained within the metadata field value |
 
 
 ### Logical Operators
@@ -95,5 +96,13 @@ Those variants are most consistently able to make use of indexes.
 ```json
 {
     "priority": {"$in": ["enterprise", "pro"]}
+}
+```
+
+`tags` contain "important"
+
+```json
+{
+    "tags": {"$contains": "important"}
 }
 ```

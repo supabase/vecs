@@ -860,7 +860,7 @@ def build_filters(json_col: Column, filters: Dict):
             if len(value) > 1:
                 raise FilterError("only one operator permitted")
             for operator, clause in value.items():
-                if operator not in ("$eq", "$ne", "$lt", "$lte", "$gt", "$gte", "$in"):
+                if operator not in ("$eq", "$ne", "$lt", "$lte", "$gt", "$gte", "$in", '$contains'):
                     raise FilterError("unknown operator")
 
                 # equality of singular values can take advantage of the metadata index
@@ -884,6 +884,10 @@ def build_filters(json_col: Column, filters: Dict):
                     # directly compare json types in the query
                     contains_value = [cast(elem, postgresql.JSONB) for elem in clause]
                     return json_col.op("->")(key).in_(contains_value)
+
+                if operator == "$contains":
+                    contains_value = cast(clause, postgresql.JSONB)
+                    return json_col.op("->")(key).contains(contains_value)
 
                 matches_value = cast(clause, postgresql.JSONB)
 
