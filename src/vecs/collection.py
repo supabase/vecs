@@ -860,7 +860,16 @@ def build_filters(json_col: Column, filters: Dict):
             if len(value) > 1:
                 raise FilterError("only one operator permitted")
             for operator, clause in value.items():
-                if operator not in ("$eq", "$ne", "$lt", "$lte", "$gt", "$gte", "$in", '$contains'):
+                if operator not in (
+                    "$eq",
+                    "$ne",
+                    "$lt",
+                    "$lte",
+                    "$gt",
+                    "$gte",
+                    "$in",
+                    "$contains",
+                ):
                     raise FilterError("unknown operator")
 
                 # equality of singular values can take advantage of the metadata index
@@ -877,7 +886,7 @@ def build_filters(json_col: Column, filters: Dict):
                     for elem in clause:
                         if not isinstance(elem, (int, str, float)):
                             raise FilterError(
-                                "argument to $in filter must be a list or scalars"
+                                "argument to $in filter must be a list of scalars"
                             )
 
                     # cast the array of scalars to a postgres array of jsonb so we can
@@ -885,11 +894,31 @@ def build_filters(json_col: Column, filters: Dict):
                     contains_value = [cast(elem, postgresql.JSONB) for elem in clause]
                     return json_col.op("->")(key).in_(contains_value)
 
-                if operator == "$contains":
-                    contains_value = cast(clause, postgresql.JSONB)
-                    return json_col.op("->")(key).contains(contains_value)
-
                 matches_value = cast(clause, postgresql.JSONB)
+
+                # @> in Postgres is heavily overloaded.
+                # By default, it will return True for
+                #
+                # scalar in array
+                #   '[1, 2, 3]'::jsonb @> '1'::jsonb -- true#
+                # equality:
+                #   '1'::jsonb @> '1'::jsonb -- true
+                # key value pair in object
+                #   '{"a": 1, "b": 2}'::jsonb @> '{"a": 1}'::jsonb -- true
+                #
+                # At this time we only want to allow "scalar in array" so
+                # we assert that the clause is a scalar and the target metadata
+                # is an array
+                if operator == "$contains":
+                    if not isinstance(clause, (int, str, float)):
+                        raise FilterError(
+                            "argument to $contains filter must be a scalar"
+                        )
+
+                    return and_(
+                        json_col.op("->")(key).contains(matches_value),
+                        func.jsonb_typeof(json_col.op("->")(key)) == "array",
+                    )
 
                 # handles non-singular values
                 if operator == "$eq":

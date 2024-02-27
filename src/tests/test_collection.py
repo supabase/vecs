@@ -583,8 +583,10 @@ def test_filters_contains(client: vecs.Client) -> None:
     records = [
         ("0", [0, 0, 0, 0], {"a": 1, "b": 2}),
         ("1", [1, 0, 0, 0], {"a": [1, 2, 3]}),
-        ("2", [1, 1, 0, 0], {"a": {"1": "2"}}),
-        ("3", [0, 0, 0, 0], {"a": "1"}),
+        ("2", [1, 1, 0, 0], {"a": {"1": "2", "x": "y"}}),
+        ("3", [0, 0, 0, 0], {"a": ["1"]}),
+        ("4", [1, 0, 0, 0], {"a": [4, 3, 2, 1]}),
+        ("5", [1, 0, 0, 0], {"a": [2]}),
     ]
 
     bar.upsert(records)
@@ -595,23 +597,9 @@ def test_filters_contains(client: vecs.Client) -> None:
         data=[0, 0, 0, 0],
         limit=3,
         filters={"a": {"$contains": 1}},
-    ) == ["0", "1"]
+    ) == ["1", "4"]
 
-    # Test $contains operator for list value
-    assert bar.query(
-        data=[1, 0, 0, 0],
-        limit=3,
-        filters={"a": {"$contains": [1, 2, 3]}},
-    ) == ["1"]
-
-    # Test $contains operator for dictionary value
-    assert bar.query(
-        data=[1, 1, 0, 0],
-        limit=3,
-        filters={"a": {"$contains": {"1": "2"}}},
-    ) == ["2"]
-
-    # Test $contains operator for string value
+    # Test $contains operator for string value. Strings treated differently than ints
     assert bar.query(
         data=[0, 0, 0, 0],
         limit=3,
@@ -619,11 +607,29 @@ def test_filters_contains(client: vecs.Client) -> None:
     ) == ["3"]
 
     # Test $contains operator for non-existent value
-    assert bar.query(
-        data=[0, 0, 0, 0],
-        limit=3,
-        filters={"a": {"$contains": 5}},
-    ) == []
+    assert (
+        bar.query(
+            data=[0, 0, 0, 0],
+            limit=3,
+            filters={"a": {"$contains": 5}},
+        )
+        == []
+    )
+
+    # Test $contains requires a scalar value
+    with pytest.raises(vecs.exc.FilterError):
+        bar.query(
+            data=[1, 0, 0, 0],
+            limit=3,
+            filters={"a": {"$contains": [1, 2, 3]}},
+        )
+
+    with pytest.raises(vecs.exc.FilterError):
+        bar.query(
+            data=[1, 0, 0, 0],
+            limit=3,
+            filters={"a": {"$contains": {"a": 1}}},
+        )
 
 
 def test_access_index(client: vecs.Client) -> None:
