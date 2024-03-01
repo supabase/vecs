@@ -29,11 +29,17 @@ def test_get_collection(client: vecs.Client) -> None:
 
 
 def test_list_collections(client: vecs.Client) -> None:
+    """
+    Test list_collections returns appropriate results for default schema (vecs) and custom schema
+    """
     assert len(client.list_collections()) == 0
     client.get_or_create_collection(name="docs", dimension=384)
     client.get_or_create_collection(name="books", dimension=1586)
+    client.get_or_create_collection(name="movies", schema="test_schema", dimension=384)
     collections = client.list_collections()
+    collections_test_schema = client.list_collections(schema="test_schema")
     assert len(collections) == 2
+    assert len(collections_test_schema) == 1
 
 
 def test_delete_collection(client: vecs.Client) -> None:

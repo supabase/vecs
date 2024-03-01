@@ -13,6 +13,7 @@ from sqlalchemy import create_engine, text
 import vecs
 
 PYTEST_DB = "postgresql://postgres:password@localhost:5611/vecs_db"
+PYTEST_SCHEMA = "test_schema"
 
 
 @pytest.fixture(scope="session")
@@ -95,6 +96,7 @@ def clean_db(maybe_start_pg: None) -> Generator[str, None, None]:
     eng = create_engine(PYTEST_DB)
     with eng.begin() as connection:
         connection.execute(text("drop schema if exists vecs cascade;"))
+        connection.execute(text(f"drop schema if exists {PYTEST_SCHEMA} cascade;"))
     yield PYTEST_DB
     eng.dispose()
 
