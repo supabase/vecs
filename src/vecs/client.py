@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional
 
 from deprecated import deprecated
-from sqlalchemy import MetaData, create_engine, text
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from vecs.adapter import Adapter
@@ -53,12 +53,10 @@ class Client:
 
         Args:
             connection_string (str): A string representing the database connection information.
-
         Returns:
             None
         """
         self.engine = create_engine(connection_string)
-        self.meta = MetaData(schema="vecs")
         self.Session = sessionmaker(self.engine)
 
         with self.Session() as sess:
@@ -84,6 +82,7 @@ class Client:
         self,
         name: str,
         *,
+        schema: str = "vecs",
         dimension: Optional[int] = None,
         adapter: Optional[Adapter] = None,
     ) -> Collection:
@@ -113,6 +112,7 @@ class Client:
             dimension=dimension or adapter_dimension,  # type: ignore
             client=self,
             adapter=adapter,
+            schema=schema,
         )
 
         return collection._create_if_not_exists()
@@ -182,18 +182,18 @@ class Client:
                 self,
             )
 
-    def list_collections(self) -> List["Collection"]:
+    def list_collections(self, *, schema: str = "vecs") -> List["Collection"]:
         """
-        List all vector collections.
+        List all vector collections by database schema.
 
         Returns:
             list[Collection]: A list of all collections.
         """
         from vecs.collection import Collection
 
-        return Collection._list_collections(self)
+        return Collection._list_collections(self, schema)
 
-    def delete_collection(self, name: str) -> None:
+    def delete_collection(self, name: str, *, schema: str = "vecs") -> None:
         """
         Delete a vector collection.
 
@@ -201,13 +201,14 @@ class Client:
 
         Args:
             name (str): The name of the collection.
+            schema (str): Optional, the database schema. Defaults to `vecs`.
 
         Returns:
             None
         """
         from vecs.collection import Collection
 
-        Collection(name, -1, self)._drop()
+        Collection(name, -1, self, schema=schema)._drop()
         return
 
     def disconnect(self) -> None:

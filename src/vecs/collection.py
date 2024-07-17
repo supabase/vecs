@@ -159,6 +159,7 @@ class Collection:
         dimension: int,
         client: Client,
         adapter: Optional[Adapter] = None,
+        schema: Optional[str] = "vecs",
     ):
         """
         Initializes a new instance of the `Collection` class.
@@ -174,7 +175,12 @@ class Collection:
         self.client = client
         self.name = name
         self.dimension = dimension
-        self.table = build_table(name, client.meta, dimension)
+        self._schema = schema
+        self.schema = self.client.engine.dialect.identifier_preparer.quote_schema(
+            self._schema
+        )
+        self.meta = MetaData(schema=self.schema)
+        self.table = build_table(name, self.meta, dimension)
         self._index: Optional[str] = None
         self.adapter = adapter or Adapter(steps=[NoOp(dimension=dimension)])
 
@@ -194,6 +200,10 @@ class Collection:
             raise MismatchedDimension(
                 "Dimensions reported by adapter, dimension, and collection do not match"
             )
+
+        with self.client.Session() as sess:
+            with sess.begin():
+                sess.execute(text(f"create schema if not exists {self.schema};"))
 
     def __repr__(self):
         """
@@ -235,7 +245,7 @@ class Collection:
             join pg_attribute pa
                 on pc.oid = pa.attrelid
         where
-            pc.relnamespace = 'vecs'::regnamespace
+            pc.relnamespace = '{self.schema}'::regnamespace
             and pc.relkind = 'r'
             and pa.attname = 'vec'
             and not pc.relname ^@ '_'
@@ -285,11 +295,12 @@ class Collection:
 
         unique_string = str(uuid.uuid4()).replace("-", "_")[0:7]
         with self.client.Session() as sess:
+            sess.execute(text(f"create schema if not exists {self.schema};"))
             sess.execute(
                 text(
                     f"""
                     create index ix_meta_{unique_string}
-                      on vecs."{self.table.name}"
+                      on {self.schema}."{self.table.name}"
                       using gin ( metadata jsonb_path_ops )
                     """
                 )
@@ -562,7 +573,7 @@ class Collection:
                 return sess.execute(stmt).fetchall() or []
 
     @classmethod
-    def _list_collections(cls, client: "Client") -> List["Collection"]:
+    def _list_collections(cls, client: "Client", schema: str) -> List["Collection"]:
         """
         PRIVATE
 
@@ -570,13 +581,14 @@ class Collection:
 
         Args:
             client (Client): The database client.
+            schema (str): The database schema to query.
 
         Returns:
-            List[Collection]: A list of all existing collections.
+            List[Collection]: A list of all existing collections within the specified schema.
         """
 
         query = text(
-            """
+            f"""
         select
             relname as table_name,
             atttypmod as embedding_dim
@@ -585,7 +597,7 @@ class Collection:
             join pg_attribute pa
                 on pc.oid = pa.attrelid
         where
-            pc.relnamespace = 'vecs'::regnamespace
+            pc.relnamespace = '{schema}'::regnamespace
             and pc.relkind = 'r'
             and pa.attname = 'vec'
             and not pc.relname ^@ '_'
@@ -636,13 +648,13 @@ class Collection:
 
         if self._index is None:
             query = text(
-                """
+                f"""
             select
                 relname as table_name
             from
                 pg_class pc
             where
-                pc.relnamespace = 'vecs'::regnamespace
+                pc.relnamespace = '{self.schema}'::regnamespace
                 and relname ilike 'ix_vector%'
                 and pc.relkind = 'i'
             """
@@ -760,7 +772,9 @@ class Collection:
             with sess.begin():
                 if self.index is not None:
                     if replace:
-                        sess.execute(text(f'drop index vecs."{self.index}";'))
+                        sess.execute(
+                            text(f'drop index "{self.schema}"."{self.index}";')
+                        )
                         self._index = None
                     else:
                         raise ArgError("replace is set to False but an index exists")
@@ -787,7 +801,7 @@ class Collection:
                         text(
                             f"""
                             create index ix_{ops}_ivfflat_nl{n_lists}_{unique_string}
-                              on vecs."{self.table.name}"
+                              on {self.schema}."{self.table.name}"
                               using ivfflat (vec {ops}) with (lists={n_lists})
                             """
                         )
@@ -806,7 +820,7 @@ class Collection:
                         text(
                             f"""
                             create index ix_{ops}_hnsw_m{m}_efc{ef_construction}_{unique_string}
-                              on vecs."{self.table.name}"
+                              on {self.schema}."{self.table.name}"
                               using hnsw (vec {ops}) WITH (m={m}, ef_construction={ef_construction});
                             """
                         )
