@@ -1,7 +1,7 @@
 import vecs
 
 
-def test_upsert(client: vecs.Client) -> None:
+def test_issue_90_multiple_index_support(client: vecs.Client) -> None:
     # Create a collection
     col1 = client.get_or_create_collection(name="col1", dimension=3)
 
