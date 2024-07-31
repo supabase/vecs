@@ -4,6 +4,7 @@ Defines the 'Collection' class
 Importing from the `vecs.collection` directly is not supported.
 All public classes, enums, and functions are re-exported by the top level `vecs` module.
 """
+
 from __future__ import annotations
 
 import math
@@ -638,17 +639,22 @@ class Collection:
             query = text(
                 """
             select
-                relname as table_name
+                pi.relname as index_name
             from
-                pg_class pc
+                pg_class pi                -- index info
+                join pg_index i            -- extend index info
+                  on pi.oid = i.indexrelid
+                join pg_class pt           -- owning table info
+                  on pt.oid = i.indrelid
             where
-                pc.relnamespace = 'vecs'::regnamespace
-                and relname ilike 'ix_vector%'
-                and pc.relkind = 'i'
+                pi.relnamespace = 'vecs'::regnamespace
+                and pi.relname ilike 'ix_vector%'
+                and pi.relkind = 'i'
+                and pt.relname = :table_name
             """
             )
             with self.client.Session() as sess:
-                ix_name = sess.execute(query).scalar()
+                ix_name = sess.execute(query, {"table_name": self.name}).scalar()
             self._index = ix_name
         return self._index
 
