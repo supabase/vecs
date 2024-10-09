@@ -40,7 +40,7 @@ check_python_version()
 long_description = (Path(__file__).parent / "README.md").read_text()
 
 REQUIRES = [
-    "pgvector==0.1.*",
+    "pgvector==0.3.*",
     "sqlalchemy==2.*",
     "psycopg2-binary==2.9.*",
     "flupy==1.*",
