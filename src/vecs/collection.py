@@ -82,6 +82,7 @@ class IndexMeasure(str, Enum):
     cosine_distance = "cosine_distance"
     l2_distance = "l2_distance"
     max_inner_product = "max_inner_product"
+    l1_distance = "l1_distance"
 
 
 @dataclass
@@ -124,12 +125,14 @@ INDEX_MEASURE_TO_OPS = {
     IndexMeasure.cosine_distance: "vector_cosine_ops",
     IndexMeasure.l2_distance: "vector_l2_ops",
     IndexMeasure.max_inner_product: "vector_ip_ops",
+    IndexMeasure.l1_distance: "vector_l1_ops",
 }
 
 INDEX_MEASURE_TO_SQLA_ACC = {
     IndexMeasure.cosine_distance: lambda x: x.cosine_distance,
     IndexMeasure.l2_distance: lambda x: x.l2_distance,
     IndexMeasure.max_inner_product: lambda x: x.max_inner_product,
+    IndexMeasure.l1_distance: lambda x: x.l1_distance,
 }
 
 

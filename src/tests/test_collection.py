@@ -806,6 +806,19 @@ def test_l2_index_query(client: vecs.Client) -> None:
     assert len(results) == 1
 
 
+def test_l1_index_query(client: vecs.Client) -> None:
+    dim = 4
+    bar = client.get_or_create_collection(name="bar", dimension=dim)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+    bar.create_index(measure=vecs.IndexMeasure.l1_distance)
+    results = bar.query(
+        data=[1, 2, 3, 4],
+        limit=1,
+        measure="l1_distance",
+    )
+    assert len(results) == 1
+
+
 def test_max_inner_product_index_query(client: vecs.Client) -> None:
     dim = 4
     bar = client.get_or_create_collection(name="bar", dimension=dim)
