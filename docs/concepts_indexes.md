@@ -26,6 +26,7 @@ Available options for distance `measure` are:
 
 - `vecs.IndexMeasure.cosine_distance`
 - `vecs.IndexMeasure.l2_distance`
+- `vecs.IndexMeasure.l1_distance`
 - `vecs.IndexMeasure.max_inner_product`
 
 which correspond to different methods for comparing query vectors to the vectors in the database.
