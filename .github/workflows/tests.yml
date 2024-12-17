@@ -38,10 +38,11 @@ jobs:
       - name: test with coverage
         run: |
           pip install coverage coveralls
-          coverage run -m pytest
+          coverage run --source=vecs -m pytest
           coverage report
 
       - name: upload coverage to coveralls
         run: coveralls
         env:
           coveralls_repo_token: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
