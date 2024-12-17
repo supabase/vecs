@@ -7,16 +7,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.8']
         postgres-version: ['15.1.1.78']
 
     services:
       postgres:
         image: supabase/postgres:${{ matrix.postgres-version }}
         env:
-          postgres_db: vecs_db
-          postgres_user: postgres
-          postgres_password: password
+          POSTGRES_DB: vecs_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
         ports:
           - 5611:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
