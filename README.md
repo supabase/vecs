@@ -42,7 +42,7 @@ pip install vecs
 
 ## Usage
 
-Visit the [quickstart guide](https://supabase.github.io/vecs/latest/api) for more complete info.
+Visit the [quickstart guide](https://supabase.github.io/vecs/api) for more complete info.
 
 ```python
 import vecs
