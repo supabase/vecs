@@ -455,6 +455,7 @@ class Collection:
         filters: Optional[Dict] = None,
         measure: Union[IndexMeasure, str] = IndexMeasure.cosine_distance,
         include_value: bool = False,
+        include_vector: bool = False,
         include_metadata: bool = False,
         *,
         probes: Optional[int] = None,
@@ -536,6 +537,9 @@ class Collection:
 
         if include_value:
             cols.append(distance_clause)
+        
+        if include_vector:
+            cols.append(self.table.c.vec)
 
         if include_metadata:
             cols.append(self.table.c.metadata)
