@@ -537,7 +537,7 @@ class Collection:
 
         if include_value:
             cols.append(distance_clause)
-        
+
         if include_vector:
             cols.append(self.table.c.vec)
 
