@@ -17,6 +17,18 @@ def test_create_collection(client: vecs.Client) -> None:
             client.create_collection(name="docs", dimension=384)
 
 
+def test_get_or_create_collection(client: vecs.Client) -> None:
+    client.get_or_create_collection(name="resumes", dimension=1536)
+    # no error is raised
+    client.get_or_create_collection(name="resumes", dimension=1536)
+
+
+def test_get_or_create_collection_dim_change(client: vecs.Client) -> None:
+    client.get_or_create_collection(name="resumes", dimension=1536)
+    with pytest.raises(vecs.exc.MismatchedDimension):
+        client.get_or_create_collection(name="resumes", dimension=1)
+
+
 def test_get_collection(client: vecs.Client) -> None:
     with pytest.warns(DeprecationWarning):
         with pytest.raises(vecs.exc.CollectionNotFound):
