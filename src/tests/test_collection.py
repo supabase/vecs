@@ -244,6 +244,18 @@ def test_query(client: vecs.Client) -> None:
     assert res[0][0] == "vec5"
     assert res[0][1] == query_meta
 
+    # include_vector
+    res = bar.query(
+        data=query_vec,
+        limit=top_k,
+        filters=None,
+        measure="cosine_distance",
+        include_vector=True,
+    )
+    assert len(res[0]) == 2
+    assert res[0][0] == "vec5"
+    assert all(res[0][1] == query_vec)
+
     # test for different numbers of probes
     assert len(bar.query(data=query_vec, limit=top_k, probes=10)) == top_k
 
