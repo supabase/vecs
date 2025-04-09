@@ -152,6 +152,7 @@ docs.query(
     measure="cosine_distance",   # distance measure to use
     include_value=False,         # should distance measure values be returned?
     include_metadata=False,      # should record metadata be returned?
+    include_vector=False,        # should vectors be returned?
 )
 ```
 
