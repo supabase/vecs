@@ -29,8 +29,8 @@ class Client:
     A `Client` instance represents a connection to a PostgreSQL database. This connection can be used to create
     and manipulate vector collections, where each collection is a group of vector records in a PostgreSQL table.
 
-    The `vecs.Client` class can be also supports usage as a context manager to ensure the connection to the database
-    is properly closed after operations, or used directly.
+    The `vecs.Client` class can also be used as a context manager to ensure the connection
+    to the database is properly closed after operations, or it can be used directly.
 
     Example usage:
 
@@ -72,13 +72,7 @@ class Client:
                 ).scalar_one()
 
     def _supports_hnsw(self):
-        return (
-            not self.vector_version.startswith("0.4")
-            and not self.vector_version.startswith("0.3")
-            and not self.vector_version.startswith("0.2")
-            and not self.vector_version.startswith("0.1")
-            and not self.vector_version.startswith("0.0")
-        )
+        return not self.vector_version.startswith(("0.0", "0.1", "0.2", "0.3", "0.4"))
 
     def get_or_create_collection(
         self,
@@ -96,13 +90,10 @@ class Client:
 
         Keyword Args:
             dimension (int): The dimensionality of the vectors in the collection.
-            pipeline (int): The dimensionality of the vectors in the collection.
+            adapter (Adapter): The adapter to use for the collection.
 
         Returns:
             Collection: The created collection.
-
-        Raises:
-            CollectionAlreadyExists: If a collection with the same name already exists
         """
         from vecs.collection import Collection
 

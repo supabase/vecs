@@ -55,9 +55,6 @@ class IndexMethod(str, Enum):
     """
     An enum representing the index methods available.
 
-    This class currently only supports the 'ivfflat' method but may
-    expand in the future.
-
     Attributes:
         auto (str): Automatically choose the best available index method.
         ivfflat (str): The ivfflat index method.
@@ -77,6 +74,7 @@ class IndexMeasure(str, Enum):
         cosine_distance (str): The cosine distance measure for indexing.
         l2_distance (str): The Euclidean (L2) distance measure for indexing.
         max_inner_product (str): The maximum inner product measure for indexing.
+        l1_distance (str): The L1 distance measure for indexing.
     """
 
     cosine_distance = "cosine_distance"
@@ -92,7 +90,7 @@ class IndexArgsIVFFlat:
     method when building an IVFFlat type index.
 
     Attributes:
-        nlist (int): The number of IVF centroids that the index should use
+        n_lists (int): The number of IVF centroids that the index should use
     """
 
     n_lists: int
@@ -120,7 +118,7 @@ class IndexArgsHNSW:
 
 
 INDEX_MEASURE_TO_OPS = {
-    # Maps the IndexMeasure enum options to the SQL ops string required by
+    # Maps the IndexMeasure enum options to SQL ops strings required by
     # the pgvector `create index` statement
     IndexMeasure.cosine_distance: "vector_cosine_ops",
     IndexMeasure.l2_distance: "vector_l2_ops",
@@ -174,6 +172,7 @@ class Collection:
             name (str): The name of the collection.
             dimension (int): The dimension of the vectors in the collection.
             client (Client): The client to use for interacting with the database.
+            adapter (Adapter): The adapter to use for the collection.
         """
         self.client = client
         self.name = name
@@ -193,10 +192,12 @@ class Collection:
             ]
         )
         if len(reported_dimensions) == 0:
-            raise ArgError("One of dimension or adapter must provide a dimension")
+            raise ArgError(
+                "Dimension must be provided by either `dimension` argument or adapter."
+            )
         elif len(reported_dimensions) > 1:
             raise MismatchedDimension(
-                "Dimensions reported by adapter, dimension, and collection do not match"
+                "Dimensions reported by `dimension` argument and adapter do not match."
             )
 
     def __repr__(self):
@@ -259,7 +260,7 @@ class Collection:
         )
         if len(reported_dimensions) > 1:
             raise MismatchedDimension(
-                "Dimensions reported by adapter, dimension, and existing collection do not match"
+                "Dimensions reported by `dimension` argument and existing collection do not match."
             )
 
         if not collection_dimension:
@@ -394,6 +395,9 @@ class Collection:
 
         Returns:
             List[str]: A list of the identifiers of the deleted vectors.
+
+        Raises:
+            ArgError: If both or neither of `ids` and `filters` are provided.
         """
         if ids is None and filters is None:
             raise ArgError("Either ids or filters must be provided.")
@@ -438,6 +442,10 @@ class Collection:
 
         Returns:
             Record: The fetched vector.
+
+        Raises:
+            ArgError: If the input is not a string.
+            KeyError: If no vector is found with the given ID.
         """
         if not isinstance(items, str):
             raise ArgError("items must be a string id")
@@ -475,6 +483,7 @@ class Collection:
             include_value (bool, optional): Whether to include the distance value in the results. Defaults to False.
             include_metadata (bool, optional): Whether to include the metadata in the results. Defaults to False.
             probes (Optional[Int], optional): Number of ivfflat index lists to query. Higher increases accuracy but decreases speed
+            include_vector: (Optional[bool], optional): Wether to include the vector in the result. Defaults to False.
             ef_search (Optional[Int], optional): Size of the dynamic candidate list for HNSW index search. Higher increases accuracy but decreases speed
             skip_adapter (bool, optional): When True, skips any associated adapter and queries using a literal vector provided to *data*
 
@@ -960,7 +969,7 @@ def build_table(name: str, meta: MetaData, dimension: int) -> Table:
     """
     PRIVATE
 
-    Builds a SQLAlchemy model underpinning a `vecs.Collection`.
+    Builds an SQLAlchemy model underpinning a `vecs.Collection`.
 
     Args:
         name (str): The name of the table.

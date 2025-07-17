@@ -7,6 +7,7 @@ import time
 from typing import Generator
 
 import pytest
+import pytest_asyncio
 from parse import parse
 from sqlalchemy import create_engine, text
 
@@ -102,4 +103,11 @@ def clean_db(maybe_start_pg: None) -> Generator[str, None, None]:
 @pytest.fixture(scope="function")
 def client(clean_db: str) -> Generator[vecs.Client, None, None]:
     client_ = vecs.create_client(clean_db)
+    yield client_
+
+
+@pytest_asyncio.fixture
+async def async_client(clean_db: str):
+    """Create an async client for testing"""
+    client_ = await vecs.create_async_client(clean_db)
     yield client_

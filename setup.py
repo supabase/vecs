@@ -43,6 +43,8 @@ REQUIRES = [
     "pgvector==0.3.*",
     "sqlalchemy==2.*",
     "psycopg2-binary==2.9.*",
+    "asyncpg==0.29.*",
+    "greenlet>=1.0.0",
     "flupy==1.*",
     "deprecated==1.2.*",
 ]
@@ -75,7 +77,7 @@ setuptools.setup(
     ],
     install_requires=REQUIRES,
     extras_require={
-        "dev": ["pytest", "parse", "numpy", "pytest-cov"],
+        "dev": ["pytest", "parse", "numpy", "pytest-cov", "pytest-asyncio"],
         "docs": [
             "mkdocs",
             "pygments",
