@@ -1,3 +1,5 @@
+from sqlalchemy import Engine
+
 from vecs import exc
 from vecs.client import Client
 from vecs.collection import (
@@ -23,6 +25,6 @@ __all__ = [
 ]
 
 
-def create_client(connection_string: str) -> Client:
+def create_client(connection_string: str = None, engine: Engine = None) -> Client:
     """Creates a client from a Postgres connection string"""
-    return Client(connection_string)
+    return Client(connection_string=connection_string, engine=engine)

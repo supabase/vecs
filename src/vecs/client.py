@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional
 
 from deprecated import deprecated
-from sqlalchemy import MetaData, create_engine, text
+from sqlalchemy import Engine, MetaData, create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from vecs.adapter import Adapter
@@ -47,17 +47,28 @@ class Client:
         vx.disconnect()
     """
 
-    def __init__(self, connection_string: str):
+    def __init__(self, connection_string: str = None, engine: Engine = None):
         """
         Initialize a Client instance.
 
         Args:
-            connection_string (str): A string representing the database connection information.
+            connection_string (str, optional): Database connection string. Required if engine is not provided.
+            engine (Engine, optional): Pre-created SQLAlchemy engine. If provided, connection_string is ignored.
 
         Returns:
             None
+        Raises:
+            ValueError: If neither connection_string nor engine is provided.
         """
-        self.engine = create_engine(connection_string)
+        if engine is not None:
+            self.engine = engine
+        elif connection_string is not None:
+            self.engine = create_engine(connection_string)
+        else:
+            raise ValueError(
+                "Either a connection_string or an engine must be provided."
+            )
+
         self.meta = MetaData(schema="vecs")
         self.Session = sessionmaker(self.engine)
 
@@ -153,7 +164,7 @@ class Client:
         from vecs.collection import Collection
 
         query = text(
-            f"""
+            """
         select
             relname as table_name,
             atttypmod as embedding_dim
