@@ -230,7 +230,7 @@ class Collection:
             Collection: The found or created collection.
         """
         query = text(
-            f"""
+            """
         select
             relname as table_name,
             atttypmod as embedding_dim
@@ -556,15 +556,9 @@ class Collection:
         with self.client.Session() as sess:
             with sess.begin():
                 # index ignored if greater than n_lists
-                sess.execute(
-                    text("set local ivfflat.probes = :probes").bindparams(probes=probes)
-                )
+                sess.execute(text(f"set local ivfflat.probes = {probes}"))
                 if self.client._supports_hnsw():
-                    sess.execute(
-                        text("set local hnsw.ef_search = :ef_search").bindparams(
-                            ef_search=ef_search
-                        )
-                    )
+                    sess.execute(text(f"set local hnsw.ef_search = {ef_search}"))
                 if len(cols) == 1:
                     return [str(x) for x in sess.scalars(stmt).fetchall()]
                 return sess.execute(stmt).fetchall() or []
@@ -780,7 +774,9 @@ class Collection:
 
                 if method == IndexMethod.ivfflat:
                     if not index_arguments:
-                        n_records: int = sess.execute(func.count(self.table.c.id)).scalar()  # type: ignore
+                        n_records: int = sess.execute(
+                            func.count(self.table.c.id)
+                        ).scalar()  # type: ignore
 
                         n_lists = (
                             int(max(n_records / 1000, 30))
