@@ -24,5 +24,8 @@ __all__ = [
 
 
 def create_client(connection_string: str) -> Client:
-    """Creates a client from a Postgres connection string"""
-    return Client(connection_string)
+    """
+    Creates a client from a Postgres connection string and optional schema.
+    Defaults to `vecs` schema.
+    """
+    return Client(connection_string=connection_string)
