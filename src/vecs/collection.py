@@ -632,38 +632,41 @@ class Collection:
         """
         PRIVATE
 
-        Note:
-            The `index` property is private and expected to undergo refactoring.
-            Do not rely on it's output.
-
         Retrieves the SQL name of the collection's vector index, if it exists.
-
-        Returns:
-            Optional[str]: The name of the index, or None if no index exists.
         """
 
         if self._index is None:
             query = text(
-                """
-            select
-                pi.relname as index_name
-            from
-                pg_class pi                -- index info
-                join pg_index i            -- extend index info
-                  on pi.oid = i.indexrelid
-                join pg_class pt           -- owning table info
-                  on pt.oid = i.indrelid
-            where
-                pi.relnamespace = 'vecs'::regnamespace
-                and pi.relname ilike 'ix_vector%'
-                and pi.relkind = 'i'
-                and pt.relname = :table_name
             """
-            )
-            with self.client.Session() as sess:
-                ix_name = sess.execute(query, {"table_name": self.name}).scalar()
-            self._index = ix_name
+            select
+                ic.relname as index_name
+            from
+                pg_class tc
+                join pg_index i on tc.oid = i.indrelid
+                join pg_class ic on ic.oid = i.indexrelid
+                join pg_am am on ic.relam = am.oid
+                join pg_attribute a
+                  on a.attrelid = tc.oid
+                 and a.attnum = any(i.indkey)
+            where
+                tc.relname = :table_name
+                and a.attname = :column_name
+                and am.amname in ('ivfflat', 'hnsw')
+            limit 1
+            """
+        )
+
+        with self.client.Session() as sess:
+            self._index = sess.execute(
+                query,
+                {
+                    "table_name": self.name,
+                    "column_name": self.vector_column,
+                },
+            ).scalar()
+
         return self._index
+
 
     def is_indexed_for_measure(self, measure: IndexMeasure):
         """
@@ -983,3 +986,4 @@ def build_table(name: str, meta: MetaData, dimension: int) -> Table:
         ),
         extend_existing=True,
     )
+
