@@ -555,15 +555,14 @@ class Collection:
 
         with self.client.Session() as sess:
             with sess.begin():
-                # index ignored if greater than n_lists
-                sess.execute(
-                    text("set local ivfflat.probes = :probes").bindparams(probes=probes)
-                )
+                # PostgreSQL SET commands do not support bind parameters,
+                # which causes errors with some drivers (e.g. pg8000).
+                # Using literal integers is safe here since probes and
+                # ef_search are already validated as integers above.
+                sess.execute(text(f"set local ivfflat.probes = {int(probes)}"))
                 if self.client._supports_hnsw():
                     sess.execute(
-                        text("set local hnsw.ef_search = :ef_search").bindparams(
-                            ef_search=ef_search
-                        )
+                        text(f"set local hnsw.ef_search = {int(ef_search)}")
                     )
                 if len(cols) == 1:
                     return [str(x) for x in sess.scalars(stmt).fetchall()]
