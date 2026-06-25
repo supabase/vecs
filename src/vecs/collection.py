@@ -646,18 +646,18 @@ class Collection:
             query = text(
                 """
             select
-                pi.relname as index_name
+                i.relname as index_name
             from
-                pg_class pi                -- index info
-                join pg_index i            -- extend index info
-                  on pi.oid = i.indexrelid
-                join pg_class pt           -- owning table info
-                  on pt.oid = i.indrelid
+                pg_index ix
+                join pg_class t on t.oid = ix.indrelid
+                join pg_class i on i.oid = ix.indexrelid
+                join pg_attribute a on a.attrelid = t.oid and a.attnum = any(ix.indkey)
+                join pg_opclass o on o.oid = any(ix.indclass)
             where
-                pi.relnamespace = 'vecs'::regnamespace
-                and pi.relname ilike 'ix_vector%'
-                and pi.relkind = 'i'
-                and pt.relname = :table_name
+                t.relnamespace = 'vecs'::regnamespace
+                and t.relname = :table_name
+                and a.attname = 'vec'
+                and o.opcname in ('vector_cosine_ops', 'vector_l2_ops', 'vector_ip_ops', 'vector_l1_ops')
             """
             )
             with self.client.Session() as sess:
@@ -676,18 +676,30 @@ class Collection:
             bool: True if the collection is indexed for the measure, False otherwise.
         """
 
-        index_name = self.index
-        if index_name is None:
-            return False
-
         ops = INDEX_MEASURE_TO_OPS.get(measure)
         if ops is None:
             return False
 
-        if ops in index_name:
-            return True
-
-        return False
+        query = text(
+            """
+            select
+                i.relname as index_name
+            from
+                pg_index ix
+                join pg_class t on t.oid = ix.indrelid
+                join pg_class i on i.oid = ix.indexrelid
+                join pg_attribute a on a.attrelid = t.oid and a.attnum = any(ix.indkey)
+                join pg_opclass o on o.oid = any(ix.indclass)
+            where
+                t.relnamespace = 'vecs'::regnamespace
+                and t.relname = :table_name
+                and a.attname = 'vec'
+                and o.opcname = :opclass
+            """
+        )
+        with self.client.Session() as sess:
+            res = sess.execute(query, {"table_name": self.name, "opclass": ops}).fetchone()
+            return res is not None
 
     def create_index(
         self,
