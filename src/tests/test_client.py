@@ -44,14 +44,27 @@ def test_list_collections(client: vecs.Client) -> None:
     assert len(client.list_collections()) == 0
     client.get_or_create_collection(name="docs", dimension=384)
     client.get_or_create_collection(name="books", dimension=1586)
+    client.get_or_create_collection(name="movies", schema="my_schema", dimension=384)
+    
     collections = client.list_collections()
     assert len(collections) == 2
+
+    collections_custom = client.list_collections(schema="my_schema")
+    assert len(collections_custom) == 1
+    assert collections_custom[0].name == "movies"
 
 
 def test_delete_collection(client: vecs.Client) -> None:
     client.get_or_create_collection(name="books", dimension=1586)
+    client.get_or_create_collection(name="movies", schema="my_schema", dimension=384)
+    
     collections = client.list_collections()
     assert len(collections) == 1
+
+    client.delete_collection("movies", schema="my_schema")
+    
+    collections_custom = client.list_collections(schema="my_schema")
+    assert len(collections_custom) == 0
 
     client.delete_collection("books")
 

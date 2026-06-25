@@ -163,6 +163,7 @@ class Collection:
         dimension: int,
         client: Client,
         adapter: Optional[Adapter] = None,
+        schema: str = "vecs",
     ):
         """
         Initializes a new instance of the `Collection` class.
@@ -174,11 +175,14 @@ class Collection:
             name (str): The name of the collection.
             dimension (int): The dimension of the vectors in the collection.
             client (Client): The client to use for interacting with the database.
+            schema (str): The database schema. Defaults to "vecs".
         """
         self.client = client
         self.name = name
         self.dimension = dimension
-        self.table = build_table(name, client.meta, dimension)
+        self.schema = schema
+        self.meta = MetaData(schema=self.schema)
+        self.table = build_table(name, self.meta, dimension)
         self._index: Optional[str] = None
         self.adapter = adapter or Adapter(steps=[NoOp(dimension=dimension)])
 
@@ -198,6 +202,14 @@ class Collection:
             raise MismatchedDimension(
                 "Dimensions reported by adapter, dimension, and collection do not match"
             )
+
+        with self.client.Session() as sess:
+            with sess.begin():
+                sess.execute(text(f"create schema if not exists {self.schema_quoted};"))
+
+    @property
+    def schema_quoted(self) -> str:
+        return self.client.engine.dialect.identifier_preparer.quote_schema(self.schema)
 
     def __repr__(self):
         """
@@ -239,13 +251,13 @@ class Collection:
             join pg_attribute pa
                 on pc.oid = pa.attrelid
         where
-            pc.relnamespace = 'vecs'::regnamespace
+            pc.relnamespace = CAST(:schema AS regnamespace)
             and pc.relkind = 'r'
             and pa.attname = 'vec'
             and not pc.relname ^@ '_'
             and pc.relname = :name
         """
-        ).bindparams(name=self.name)
+        ).bindparams(name=self.name, schema=self.schema_quoted)
         with self.client.Session() as sess:
             query_result = sess.execute(query).fetchone()
 
@@ -279,7 +291,7 @@ class Collection:
         """
 
         collection_exists = self.__class__._does_collection_exist(
-            self.client, self.name
+            self.client, self.name, schema=self.schema
         )
         if collection_exists:
             raise CollectionAlreadyExists(
@@ -293,7 +305,7 @@ class Collection:
                 text(
                     f"""
                     create index ix_meta_{unique_string}
-                      on vecs."{self.table.name}"
+                      on {self.schema_quoted}."{self.table.name}"
                       using gin ( metadata jsonb_path_ops )
                     """
                 )
@@ -570,7 +582,7 @@ class Collection:
                 return sess.execute(stmt).fetchall() or []
 
     @classmethod
-    def _list_collections(cls, client: "Client") -> List["Collection"]:
+    def _list_collections(cls, client: "Client", schema: str = "vecs") -> List["Collection"]:
         """
         PRIVATE
 
@@ -578,11 +590,13 @@ class Collection:
 
         Args:
             client (Client): The database client.
+            schema (str): The database schema. Defaults to "vecs".
 
         Returns:
             List[Collection]: A list of all existing collections.
         """
 
+        schema_quoted = client.engine.dialect.identifier_preparer.quote_schema(schema)
         query = text(
             """
         select
@@ -593,21 +607,21 @@ class Collection:
             join pg_attribute pa
                 on pc.oid = pa.attrelid
         where
-            pc.relnamespace = 'vecs'::regnamespace
+            pc.relnamespace = CAST(:schema AS regnamespace)
             and pc.relkind = 'r'
             and pa.attname = 'vec'
             and not pc.relname ^@ '_'
         """
-        )
+        ).bindparams(schema=schema_quoted)
         xc = []
         with client.Session() as sess:
             for name, dimension in sess.execute(query):
-                existing_collection = cls(name, dimension, client)
+                existing_collection = cls(name, dimension, client, schema=schema)
                 xc.append(existing_collection)
         return xc
 
     @classmethod
-    def _does_collection_exist(cls, client: "Client", name: str) -> bool:
+    def _does_collection_exist(cls, client: "Client", name: str, schema: str = "vecs") -> bool:
         """
         PRIVATE
 
@@ -616,13 +630,14 @@ class Collection:
         Args:
             client (Client): The database client.
             name (str): The name of the collection
+            schema (str): The database schema. Defaults to "vecs".
 
         Returns:
             Exists: Whether the collection exists or not
         """
 
         try:
-            client.get_collection(name)
+            client.get_collection(name, schema=schema)
             return True
         except CollectionNotFound:
             return False
@@ -646,22 +661,22 @@ class Collection:
             query = text(
                 """
             select
-                pi.relname as index_name
+                i.relname as index_name
             from
-                pg_class pi                -- index info
-                join pg_index i            -- extend index info
-                  on pi.oid = i.indexrelid
-                join pg_class pt           -- owning table info
-                  on pt.oid = i.indrelid
+                pg_index ix
+                join pg_class t on t.oid = ix.indrelid
+                join pg_class i on i.oid = ix.indexrelid
+                join pg_attribute a on a.attrelid = t.oid and a.attnum = any(ix.indkey)
+                join pg_opclass o on o.oid = any(ix.indclass)
             where
-                pi.relnamespace = 'vecs'::regnamespace
-                and pi.relname ilike 'ix_vector%'
-                and pi.relkind = 'i'
-                and pt.relname = :table_name
+                t.relnamespace = CAST(:schema AS regnamespace)
+                and t.relname = :table_name
+                and a.attname = 'vec'
+                and o.opcname in ('vector_cosine_ops', 'vector_l2_ops', 'vector_ip_ops', 'vector_l1_ops')
             """
             )
             with self.client.Session() as sess:
-                ix_name = sess.execute(query, {"table_name": self.name}).scalar()
+                ix_name = sess.execute(query, {"table_name": self.name, "schema": self.schema_quoted}).scalar()
             self._index = ix_name
         return self._index
 
@@ -676,18 +691,30 @@ class Collection:
             bool: True if the collection is indexed for the measure, False otherwise.
         """
 
-        index_name = self.index
-        if index_name is None:
-            return False
-
         ops = INDEX_MEASURE_TO_OPS.get(measure)
         if ops is None:
             return False
 
-        if ops in index_name:
-            return True
-
-        return False
+        query = text(
+            """
+            select
+                i.relname as index_name
+            from
+                pg_index ix
+                join pg_class t on t.oid = ix.indrelid
+                join pg_class i on i.oid = ix.indexrelid
+                join pg_attribute a on a.attrelid = t.oid and a.attnum = any(ix.indkey)
+                join pg_opclass o on o.oid = any(ix.indclass)
+            where
+                t.relnamespace = CAST(:schema AS regnamespace)
+                and t.relname = :table_name
+                and a.attname = 'vec'
+                and o.opcname = :opclass
+            """
+        )
+        with self.client.Session() as sess:
+            res = sess.execute(query, {"table_name": self.name, "opclass": ops, "schema": self.schema_quoted}).fetchone()
+            return res is not None
 
     def create_index(
         self,
@@ -773,7 +800,7 @@ class Collection:
             with sess.begin():
                 if self.index is not None:
                     if replace:
-                        sess.execute(text(f'drop index vecs."{self.index}";'))
+                        sess.execute(text(f'drop index {self.schema_quoted}."{self.index}";'))
                         self._index = None
                     else:
                         raise ArgError("replace is set to False but an index exists")
@@ -800,7 +827,7 @@ class Collection:
                         text(
                             f"""
                             create index ix_{ops}_ivfflat_nl{n_lists}_{unique_string}
-                              on vecs."{self.table.name}"
+                              on {self.schema_quoted}."{self.table.name}"
                               using ivfflat (vec {ops}) with (lists={n_lists})
                             """
                         )
@@ -819,7 +846,7 @@ class Collection:
                         text(
                             f"""
                             create index ix_{ops}_hnsw_m{m}_efc{ef_construction}_{unique_string}
-                              on vecs."{self.table.name}"
+                              on {self.schema_quoted}."{self.table.name}"
                               using hnsw (vec {ops}) WITH (m={m}, ef_construction={ef_construction});
                             """
                         )

@@ -86,6 +86,7 @@ class Client:
         *,
         dimension: Optional[int] = None,
         adapter: Optional[Adapter] = None,
+        schema: str = "vecs",
     ) -> Collection:
         """
         Get a vector collection by name, or create it if no collection with
@@ -97,6 +98,7 @@ class Client:
         Keyword Args:
             dimension (int): The dimensionality of the vectors in the collection.
             pipeline (int): The dimensionality of the vectors in the collection.
+            schema (str): The database schema. Defaults to "vecs".
 
         Returns:
             Collection: The created collection.
@@ -113,12 +115,13 @@ class Client:
             dimension=dimension or adapter_dimension,  # type: ignore
             client=self,
             adapter=adapter,
+            schema=schema,
         )
 
         return collection._create_if_not_exists()
 
     @deprecated("use Client.get_or_create_collection")
-    def create_collection(self, name: str, dimension: int) -> Collection:
+    def create_collection(self, name: str, dimension: int, *, schema: str = "vecs") -> Collection:
         """
         Create a new vector collection.
 
@@ -134,10 +137,10 @@ class Client:
         """
         from vecs.collection import Collection
 
-        return Collection(name, dimension, self)._create()
+        return Collection(name, dimension, self, schema=schema)._create()
 
     @deprecated("use Client.get_or_create_collection")
-    def get_collection(self, name: str) -> Collection:
+    def get_collection(self, name: str, *, schema: str = "vecs") -> Collection:
         """
         Retrieve an existing vector collection.
 
@@ -152,6 +155,7 @@ class Client:
         """
         from vecs.collection import Collection
 
+        schema_quoted = self.engine.dialect.identifier_preparer.quote_schema(schema)
         query = text(
             f"""
         select
@@ -162,13 +166,13 @@ class Client:
             join pg_attribute pa
                 on pc.oid = pa.attrelid
         where
-            pc.relnamespace = 'vecs'::regnamespace
+            pc.relnamespace = CAST(:schema AS regnamespace)
             and pc.relkind = 'r'
             and pa.attname = 'vec'
             and not pc.relname ^@ '_'
             and pc.relname = :name
         """
-        ).bindparams(name=name)
+        ).bindparams(name=name, schema=schema_quoted)
         with self.Session() as sess:
             query_result = sess.execute(query).fetchone()
 
@@ -180,9 +184,10 @@ class Client:
                 name,
                 dimension,
                 self,
+                schema=schema,
             )
 
-    def list_collections(self) -> List["Collection"]:
+    def list_collections(self, *, schema: str = "vecs") -> List["Collection"]:
         """
         List all vector collections.
 
@@ -191,9 +196,9 @@ class Client:
         """
         from vecs.collection import Collection
 
-        return Collection._list_collections(self)
+        return Collection._list_collections(self, schema=schema)
 
-    def delete_collection(self, name: str) -> None:
+    def delete_collection(self, name: str, *, schema: str = "vecs") -> None:
         """
         Delete a vector collection.
 
@@ -207,7 +212,7 @@ class Client:
         """
         from vecs.collection import Collection
 
-        Collection(name, -1, self)._drop()
+        Collection(name, -1, self, schema=schema)._drop()
         return
 
     def disconnect(self) -> None:
