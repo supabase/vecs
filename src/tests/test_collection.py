@@ -895,3 +895,27 @@ def test_hnsw_unavailable_error(client: vecs.Client) -> None:
     bar = client.get_or_create_collection(name="bar", dimension=dim)
     with pytest.raises(ArgError):
         bar.create_index(method=IndexMethod.hnsw)
+
+
+def test_custom_named_index(client: vecs.Client) -> None:
+    from sqlalchemy import text
+    bar = client.get_or_create_collection(name="bar", dimension=4)
+    bar.upsert([("a", [1, 2, 3, 4], {})])
+    
+    # Create an index with a completely custom name that does not contain the ops string
+    with client.Session() as sess:
+        sess.execute(
+            text(
+                """
+                create index my_custom_idx
+                  on vecs."bar"
+                  using hnsw (vec vector_l2_ops);
+                """
+            )
+        )
+        sess.commit()
+
+    assert bar.is_indexed_for_measure(vecs.IndexMeasure.l2_distance)
+    assert not bar.is_indexed_for_measure(vecs.IndexMeasure.cosine_distance)
+    assert bar.index == "my_custom_idx"
+
