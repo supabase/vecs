@@ -895,3 +895,37 @@ def test_hnsw_unavailable_error(client: vecs.Client) -> None:
     bar = client.get_or_create_collection(name="bar", dimension=dim)
     with pytest.raises(ArgError):
         bar.create_index(method=IndexMethod.hnsw)
+
+
+def test_custom_schema(client: vecs.Client) -> None:
+    # 1. Test get_or_create_collection with custom schema
+    foo = client.get_or_create_collection(name="foo", schema="my_custom_schema", dimension=3)
+    foo.upsert([("a", [1, 2, 3], {})])
+    assert len(foo) == 1
+
+    # 2. Test list_collections with custom schema
+    cols = client.list_collections(schema="my_custom_schema")
+    assert len(cols) == 1
+    assert cols[0].name == "foo"
+
+    # 3. Test index creation and checking in custom schema
+    foo.create_index(measure=vecs.IndexMeasure.l2_distance)
+    assert foo.is_indexed_for_measure(vecs.IndexMeasure.l2_distance)
+
+
+def test_escaped_schema(client: vecs.Client) -> None:
+    # 1. Test schema name with mixed-case and special characters (which require double quoting)
+    schema_name = "esCape Me!"
+    bar = client.get_or_create_collection(name="bar", schema=schema_name, dimension=3)
+    bar.upsert([("a", [1, 2, 3], {})])
+    assert len(bar) == 1
+
+    # 2. Test list_collections works
+    cols = client.list_collections(schema=schema_name)
+    assert len(cols) == 1
+    assert cols[0].name == "bar"
+
+    # 3. Test index creation and checking
+    bar.create_index(measure=vecs.IndexMeasure.cosine_distance)
+    assert bar.is_indexed_for_measure(vecs.IndexMeasure.cosine_distance)
+
