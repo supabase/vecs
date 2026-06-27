@@ -895,3 +895,32 @@ def test_hnsw_unavailable_error(client: vecs.Client) -> None:
     bar = client.get_or_create_collection(name="bar", dimension=dim)
     with pytest.raises(ArgError):
         bar.create_index(method=IndexMethod.hnsw)
+
+
+def test_export_migration(client: vecs.Client) -> None:
+    bar = client.get_or_create_collection(name="bar_migration", dimension=3)
+    
+    # 1. Test defaults (include_extension=True, include_schema=True, if_not_exists=True)
+    sql_default = bar.export_migration()
+    assert "CREATE EXTENSION IF NOT EXISTS vector;" in sql_default
+    assert "CREATE SCHEMA IF NOT EXISTS vecs;" in sql_default
+    assert "CREATE TABLE IF NOT EXISTS vecs.bar_migration (" in sql_default
+    assert "CREATE INDEX IF NOT EXISTS ix_meta_bar_migration ON vecs.\"bar_migration\" USING gin (metadata jsonb_path_ops);" in sql_default
+    
+    # 2. Test include_extension=False
+    sql_no_ext = bar.export_migration(include_extension=False)
+    assert "CREATE EXTENSION" not in sql_no_ext
+    assert "CREATE SCHEMA IF NOT EXISTS vecs;" in sql_no_ext
+    
+    # 3. Test include_schema=False
+    sql_no_schema = bar.export_migration(include_schema=False)
+    assert "CREATE EXTENSION IF NOT EXISTS vector;" in sql_no_schema
+    assert "CREATE SCHEMA" not in sql_no_schema
+    
+    # 4. Test if_not_exists=False
+    sql_no_exists = bar.export_migration(if_not_exists=False)
+    assert "CREATE EXTENSION vector;" in sql_no_exists
+    assert "CREATE SCHEMA vecs;" in sql_no_exists
+    assert "CREATE TABLE vecs.bar_migration (" in sql_no_exists
+    assert "CREATE INDEX ix_meta_bar_migration ON vecs.\"bar_migration\" USING gin (metadata jsonb_path_ops);" in sql_no_exists
+

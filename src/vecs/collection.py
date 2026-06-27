@@ -300,6 +300,65 @@ class Collection:
             )
         return self
 
+    def export_migration(
+        self,
+        *,
+        include_extension: bool = True,
+        include_schema: bool = True,
+        if_not_exists: bool = True,
+    ) -> str:
+        """
+        Exports the SQL migration script for this collection.
+
+        Args:
+            include_extension (bool): Whether to include the `CREATE EXTENSION` statement for pgvector.
+            include_schema (bool): Whether to include the `CREATE SCHEMA` statement.
+            if_not_exists (bool): Whether to include `IF NOT EXISTS` clauses.
+
+        Returns:
+            str: The SQL DDL statements as a string.
+        """
+        from sqlalchemy.schema import CreateTable
+        from sqlalchemy.dialects import postgresql
+
+        schema = self.table.schema or "vecs"
+        statements = []
+
+        if include_extension:
+            ext_sql = (
+                "CREATE EXTENSION IF NOT EXISTS vector;"
+                if if_not_exists
+                else "CREATE EXTENSION vector;"
+            )
+            statements.append(ext_sql)
+
+        if include_schema:
+            schema_sql = (
+                f"CREATE SCHEMA IF NOT EXISTS {schema};"
+                if if_not_exists
+                else f"CREATE SCHEMA {schema};"
+            )
+            statements.append(schema_sql)
+
+        create_table_sql = str(
+            CreateTable(self.table).compile(dialect=postgresql.dialect())
+        ).strip()
+        if if_not_exists and create_table_sql.startswith("CREATE TABLE "):
+            create_table_sql = (
+                "CREATE TABLE IF NOT EXISTS " + create_table_sql[len("CREATE TABLE ") :]
+            )
+        create_table_sql += ";"
+        statements.append(create_table_sql)
+
+        index_name = f"ix_meta_{self.table.name}"
+        if if_not_exists:
+            index_sql = f'CREATE INDEX IF NOT EXISTS {index_name} ON {schema}."{self.table.name}" USING gin (metadata jsonb_path_ops);'
+        else:
+            index_sql = f'CREATE INDEX {index_name} ON {schema}."{self.table.name}" USING gin (metadata jsonb_path_ops);'
+        statements.append(index_sql)
+
+        return "\n\n".join(statements)
+
     def _drop(self):
         """
         PRIVATE
