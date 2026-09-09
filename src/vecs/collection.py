@@ -700,23 +700,19 @@ class Collection:
         Creates an index for the collection.
 
         Note:
-            When `vecs` creates an index on a pgvector column in PostgreSQL, it uses a multi-step
-            process that enables performant indexes to be built for large collections with low end
-            database hardware.
+            The index is created in place on the collection's table. When *replace* is
+            True and an index already exists, it is dropped first, in the same
+            transaction.
 
-            Those steps are:
+            For `IndexMethod.auto`, HNSW is used when the installed pgvector supports
+            it (> 0.5.0), otherwise IVFFlat.
 
-            - Creates a new table with a different name
-            - Randomly selects records from the existing table
-            - Inserts the random records from the existing table into the new table
-            - Creates the requested vector index on the new table
-            - Upserts all data from the existing table into the new table
-            - Drops the existing table
-            - Renames the new table to the existing tables name
+            For IVFFlat without explicit *index_arguments*, the number of lists is
+            derived from the row count: `max(n_records / 1000, 30)` below one million
+            rows, and `sqrt(n_records)` above it.
 
-            If you create dependencies (like views) on the table that underpins
-            a `vecs.Collection` the `create_index` step may require you to drop those dependencies before
-            it will succeed.
+            `CREATE INDEX` is not run concurrently, so writes to the collection are
+            blocked for the duration of the build. Reads are unaffected.
 
         Args:
             measure (IndexMeasure, optional): The measure to index for. Defaults to 'cosine_distance'.
