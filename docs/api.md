@@ -8,7 +8,7 @@ If you don't have a Postgres database with the pgvector ready, see [hosting](hos
 
 Requires:
 
-- Python 3.7+
+- Python 3.8+
 
 You can install vecs using pip:
 
