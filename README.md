@@ -1,7 +1,7 @@
 # vecs
 
 <p>
-    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="Python version" height="18"></a>
+    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="Python version" height="18"></a>
     <a href="https://github.com/supabase/vecs/actions">
         <img src="https://github.com/supabase/vecs/workflows/tests/badge.svg" alt="test status" height="18">
     </a>
@@ -32,7 +32,7 @@ If you don't have a Postgres database with the pgvector ready, see [hosting](htt
 
 Requires:
 
-- Python 3.7+
+- Python 3.8+
 
 You can install vecs using pip:
 
