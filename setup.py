@@ -84,5 +84,6 @@ setuptools.setup(
             "mike",
         ],
         "text_embedding": ["sentence-transformers==2.*"],
+        "progress": ["tqdm"],
     },
 )

@@ -12,7 +12,17 @@ import uuid
 import warnings
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sized,
+    Tuple,
+    Union,
+)
 
 from flupy import flu
 from pgvector.sqlalchemy import Vector
@@ -319,7 +329,10 @@ class Collection:
         return self
 
     def upsert(
-        self, records: Iterable[Tuple[str, Any, Metadata]], skip_adapter: bool = False
+        self,
+        records: Iterable[Tuple[str, Any, Metadata]],
+        skip_adapter: bool = False,
+        show_progress: bool = False,
     ) -> None:
         """
         Inserts or updates *vectors* records in the collection.
@@ -334,29 +347,54 @@ class Collection:
 
             skip_adapter (bool): Should the adapter be skipped while upserting. i.e. if vectors are being
                 provided, rather than a media type that needs to be transformed
+
+            show_progress (bool): Display a progress bar while upserting. Requires the
+                optional `tqdm` dependency (`pip install vecs[progress]`). The total is
+                shown when *records* is sized (e.g. a list); otherwise the bar is
+                indeterminate.
         """
 
         chunk_size = 500
 
-        if skip_adapter:
-            pipeline = flu(records).chunk(chunk_size)
-        else:
-            # Construct a lazy pipeline of steps to transform and chunk user input
-            pipeline = flu(self.adapter(records, AdapterContext("upsert"))).chunk(
-                chunk_size
-            )
+        progress = None
+        if show_progress:
+            try:
+                from tqdm.auto import tqdm  # picks notebook widget or terminal bar
+            except ImportError as exc:
+                raise ImportError(
+                    "show_progress=True requires the optional 'tqdm' dependency. "
+                    "Install it with `pip install vecs[progress]`."
+                ) from exc
+            total = len(records) if isinstance(records, Sized) else None
+            progress = tqdm(total=total, desc="upsert", unit="records")
 
-        with self.client.Session() as sess:
-            with sess.begin():
-                for chunk in pipeline:
-                    stmt = postgresql.insert(self.table).values(chunk)
-                    stmt = stmt.on_conflict_do_update(
-                        index_elements=[self.table.c.id],
-                        set_=dict(
-                            vec=stmt.excluded.vec, metadata=stmt.excluded.metadata
-                        ),
-                    )
-                    sess.execute(stmt)
+        try:
+            if skip_adapter:
+                pipeline = flu(records).chunk(chunk_size)
+            else:
+                # Construct a lazy pipeline of steps to transform and chunk user input
+                pipeline = flu(self.adapter(records, AdapterContext("upsert"))).chunk(
+                    chunk_size
+                )
+
+            with self.client.Session() as sess:
+                with sess.begin():
+                    for chunk in pipeline:
+                        stmt = postgresql.insert(self.table).values(chunk)
+                        stmt = stmt.on_conflict_do_update(
+                            index_elements=[self.table.c.id],
+                            set_=dict(
+                                vec=stmt.excluded.vec, metadata=stmt.excluded.metadata
+                            ),
+                        )
+                        sess.execute(stmt)
+                        if progress is not None:
+                            progress.update(len(chunk))
+        finally:
+            # Close the bar on errors too, so a failed upsert does not leave a
+            # half-rendered notebook widget behind.
+            if progress is not None:
+                progress.close()
         return None
 
     def fetch(self, ids: Iterable[str]) -> List[Record]:
