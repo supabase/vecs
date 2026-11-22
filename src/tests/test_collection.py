@@ -674,6 +674,13 @@ def test_create_index(client: vecs.Client) -> None:
     )
 
 
+def test_create_index_with_custom_pg_settings(client: vecs.Client) -> None:
+    dim = 4
+    col = client.get_or_create_collection(name="settings_test", dimension=dim)
+    col.create_index(statement_timeout="30s", maintenance_work_mem="64MB")
+    assert col.index is not None
+
+
 def test_ivfflat(client: vecs.Client) -> None:
     dim = 4
     bar = client.get_or_create_collection(name="bar", dimension=dim)

@@ -695,6 +695,9 @@ class Collection:
         method: IndexMethod = IndexMethod.auto,
         index_arguments: Optional[Union[IndexArgsIVFFlat, IndexArgsHNSW]] = None,
         replace=True,
+        *,
+        statement_timeout: Optional[str] = None,
+        maintenance_work_mem: Optional[str] = None,
     ) -> None:
         """
         Creates an index for the collection.
@@ -723,6 +726,8 @@ class Collection:
             method (IndexMethod, optional): The indexing method to use. Defaults to 'auto'.
             index_arguments: (IndexArgsIVFFlat | IndexArgsHNSW, optional): Index type specific arguments
             replace (bool, optional): Whether to replace the existing index. Defaults to True.
+            statement_timeout (str, optional): PostgreSQL statement timeout during index build (e.g. '30s', '10min').
+            maintenance_work_mem (str, optional): PostgreSQL maintenance work memory during index build (e.g. '64MB', '512MB').
 
         Raises:
             ArgError: If an invalid index method is used, or if *replace* is False and an index already exists.
@@ -771,6 +776,20 @@ class Collection:
 
         with self.client.Session() as sess:
             with sess.begin():
+                if statement_timeout is not None:
+                    sess.execute(
+                        text("SELECT set_config('statement_timeout', :val, true)").bindparams(
+                            val=statement_timeout
+                        )
+                    )
+
+                if maintenance_work_mem is not None:
+                    sess.execute(
+                        text("SELECT set_config('maintenance_work_mem', :val, true)").bindparams(
+                            val=maintenance_work_mem
+                        )
+                    )
+
                 if self.index is not None:
                     if replace:
                         sess.execute(text(f'drop index vecs."{self.index}";'))
