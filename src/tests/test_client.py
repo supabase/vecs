@@ -72,3 +72,42 @@ def test_dispose(client: vecs.Client) -> None:
     # engine.dispose re-creates the connection pool so
     # confirm that the client can still re-connect transparently
     assert len(client.list_collections()) == 1
+
+
+def test_client_with_engine(clean_db: str) -> None:
+    from sqlalchemy import create_engine
+
+    engine = create_engine(clean_db)
+    client = vecs.Client(engine=engine)
+    assert client.vector_version != ""
+    client.get_or_create_collection(name="engine_test", dimension=3)
+    assert len(client.list_collections()) >= 1
+
+
+def test_create_client_with_engine(clean_db: str) -> None:
+    from sqlalchemy import create_engine
+
+    engine = create_engine(clean_db)
+    client = vecs.create_client(engine=engine)
+    assert client.vector_version != ""
+    client.get_or_create_collection(name="create_client_engine_test", dimension=3)
+    assert len(client.list_collections()) >= 1
+
+
+def test_client_init_validation() -> None:
+    from sqlalchemy import create_engine
+
+    # Neither connection_string nor engine provided
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of 'connection_string' or 'engine' must be provided.",
+    ):
+        vecs.Client()
+
+    # Both connection_string and engine provided
+    dummy_engine = create_engine("postgresql://user:pass@localhost:5432/db")
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of 'connection_string' or 'engine' must be provided.",
+    ):
+        vecs.Client("postgresql://user:pass@localhost:5432/db", engine=dummy_engine)
