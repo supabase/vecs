@@ -17,6 +17,7 @@ from vecs.adapter import Adapter
 from vecs.exc import CollectionNotFound
 
 if TYPE_CHECKING:
+    from sqlalchemy.engine import Engine
     from vecs.collection import Collection
 
 
@@ -47,17 +48,37 @@ class Client:
         vx.disconnect()
     """
 
-    def __init__(self, connection_string: str):
+    def __init__(
+        self,
+        connection_string: Optional[str] = None,
+        *,
+        engine: Optional[Engine] = None,
+    ):
         """
         Initialize a Client instance.
 
         Args:
-            connection_string (str): A string representing the database connection information.
+            connection_string (Optional[str]): A string representing the database connection information.
+            engine (Optional[Engine]): An existing SQLAlchemy Engine instance.
+
+        Raises:
+            ValueError: If neither or both connection_string and engine are provided.
 
         Returns:
             None
         """
-        self.engine = create_engine(connection_string)
+        if (connection_string is None and engine is None) or (
+            connection_string is not None and engine is not None
+        ):
+            raise ValueError(
+                "Exactly one of 'connection_string' or 'engine' must be provided."
+            )
+
+        if engine is not None:
+            self.engine = engine
+        else:
+            self.engine = create_engine(connection_string)
+
         self.meta = MetaData(schema="vecs")
         self.Session = sessionmaker(self.engine)
 

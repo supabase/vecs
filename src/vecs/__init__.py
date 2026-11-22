@@ -1,3 +1,8 @@
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Engine
+
 from vecs import exc
 from vecs.client import Client
 from vecs.collection import (
@@ -23,6 +28,10 @@ __all__ = [
 ]
 
 
-def create_client(connection_string: str) -> Client:
-    """Creates a client from a Postgres connection string"""
-    return Client(connection_string)
+def create_client(
+    connection_string: Optional[str] = None,
+    *,
+    engine: Optional[Engine] = None,
+) -> Client:
+    """Creates a client from a Postgres connection string or an existing SQLAlchemy Engine."""
+    return Client(connection_string=connection_string, engine=engine)
